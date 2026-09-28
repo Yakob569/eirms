@@ -1,0 +1,24 @@
+.qr {
+  position: relative;
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.qr[data-bordered="true"] {
+  border: 1px solid var(--line);
+}
+
+.scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--brand);
+  box-shadow: 0 0 10px var(--brand);
+  animation: eirs-scan 2.6s ease-in-out infinite;
+}

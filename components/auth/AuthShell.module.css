@@ -1,0 +1,356 @@
+.shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #fff;
+}
+
+/* ---------- Left: light tint panel ---------- */
+
+.panel {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--tint-1);
+  display: flex;
+  flex-direction: column;
+  padding: 48px 64px;
+  overflow: hidden;
+}
+
+.circleLg,
+.circleSm {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--tint-2);
+  pointer-events: none;
+}
+
+.circleLg {
+  right: -180px;
+  top: -180px;
+  width: 520px;
+  height: 520px;
+}
+
+.circleSm {
+  right: -90px;
+  top: -90px;
+  width: 340px;
+  height: 340px;
+}
+
+.panelBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: 60px;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  max-width: 520px;
+}
+
+.receipt {
+  width: 360px;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.receiptHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--tint-1);
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.receiptRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.receiptMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.merchant {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.place {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.irn {
+  font-size: 12px;
+}
+
+.rule {
+  height: 1px;
+  background: var(--line);
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.total span:first-child {
+  color: var(--muted);
+}
+
+.total span:last-child {
+  font-weight: 500;
+}
+
+.stepIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--brand-dark);
+}
+
+.stepTitle {
+  margin: 0;
+  font-size: 54px;
+  line-height: 1.02;
+  max-width: 500px;
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.step {
+  display: flex;
+  gap: 18px;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  background: transparent;
+  color: var(--muted);
+  border: 1.5px solid var(--tint-2);
+  transition: all 0.3s;
+}
+
+.line {
+  width: 1.5px;
+  flex: 1;
+  min-height: 30px;
+  background: var(--tint-2);
+  transition: background 0.3s;
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 0 28px;
+}
+
+.stepLabel {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.stepSub {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.step[data-state="active"] .dot {
+  background: #fff;
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+.step[data-state="done"] .dot {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+
+.step[data-state="done"] .line {
+  background: var(--brand);
+}
+
+.step[data-state="active"] .stepLabel,
+.step[data-state="done"] .stepLabel {
+  color: var(--ink);
+}
+
+.legal {
+  position: relative;
+  display: flex;
+  gap: 20px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+
+.legal a {
+  color: var(--muted);
+}
+
+/* ---------- Right: form side ---------- */
+
+.main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 64px;
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobileLogo,
+.mobileStep {
+  display: none;
+}
+
+.lang {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.langSep {
+  opacity: 0.4;
+}
+
+.langActive {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 32px 0;
+}
+
+.content {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  animation: eirs-up 0.45s ease both;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1180px) {
+  .panel {
+    padding: 40px 44px;
+  }
+  .main {
+    padding: 32px 44px;
+  }
+  .heroTitle {
+    font-size: 48px;
+  }
+  .stepTitle {
+    font-size: 44px;
+  }
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+  .panel {
+    display: none;
+  }
+  .main {
+    padding: 20px 20px 32px;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .topbar {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .mobileLogo {
+    display: block;
+    margin-right: auto;
+  }
+  .mobileStep {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--brand-dark);
+    background: var(--tint-1);
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+}

@@ -1,0 +1,87 @@
+/* See-through loader: the page stays visible, lightly blurred, behind it. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  color: var(--ink);
+  padding: 24px;
+  text-align: center;
+  animation: eirs-up 0.25s ease both;
+}
+
+.mark {
+  position: relative;
+  width: 84px;
+  height: 84px;
+}
+
+.ring,
+.core {
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+}
+
+.ring {
+  border: 1.5px solid var(--brand);
+  animation: eirs-ring 1.4s ease-out infinite;
+}
+
+.core {
+  background: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.message {
+  font-style: italic;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.detail {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.track {
+  width: 260px;
+  max-width: 100%;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--tint-2);
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: var(--brand);
+  transform-origin: left;
+  animation-name: eirs-fill;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+.footer {
+  position: absolute;
+  bottom: 40px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}

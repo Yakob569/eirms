@@ -1,0 +1,118 @@
+/* Brand tokens — teal is the chosen palette. Green / blue alternates from the
+   design review are kept below; set data-palette on <html> to try them. */
+:root {
+  --brand: #0e7c86;
+  --brand-dark: #0a636b;
+  --ink: #0b2a33;
+  --tint-1: #e6f3f4;
+  --tint-2: #c9e5e7;
+  --bg: #f5f9f9;
+  --line: #d7e5e6;
+  --muted: #4a6570;
+  --placeholder: #9aaeb3;
+  --danger: #b42318;
+
+  --shadow-card: 0 20px 50px -24px rgba(11, 42, 51, 0.3);
+  --shadow-lift: 0 40px 80px -30px rgba(11, 42, 51, 0.35);
+}
+
+:root[data-palette="green"] {
+  --brand: #12704f;
+  --brand-dark: #0c5a3f;
+  --ink: #0a2e24;
+  --tint-1: #e7f2ec;
+  --tint-2: #c8e3d4;
+  --bg: #f5faf7;
+  --line: #d4e4da;
+  --muted: #4b665a;
+}
+
+:root[data-palette="blue"] {
+  --brand: #2150d6;
+  --brand-dark: #1a40ae;
+  --ink: #0c1b48;
+  --tint-1: #eaeffd;
+  --tint-2: #cfdaf9;
+  --bg: #f6f8fe;
+  --line: #d9e0f2;
+  --muted: #4d5877;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--brand-dark);
+}
+
+button {
+  font: inherit;
+}
+
+input::placeholder {
+  color: var(--placeholder);
+}
+
+.serif {
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+}
+
+.mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.accent {
+  color: var(--brand);
+}
+
+@keyframes eirs-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes eirs-ring {
+  0% { transform: scale(0.8); opacity: 0.7; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+
+@keyframes eirs-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes eirs-scan {
+  0% { transform: translateY(-4px); }
+  50% { transform: translateY(58px); }
+  100% { transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
