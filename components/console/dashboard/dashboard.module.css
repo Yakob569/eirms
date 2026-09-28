@@ -1,0 +1,746 @@
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--tint-2);
+  font-size: 14px;
+}
+
+.noticeIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--tint-1);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.noticeText {
+  flex: 1;
+}
+
+.noticeLink {
+  font-weight: 600;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ─── KPI tiles ───────────────────────────────────────────── */
+.kpis {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr 1fr 1fr;
+  gap: 14px;
+}
+
+.tile {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.tileLabel {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tileValue {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 34px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tileSub {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.hero {
+  background: var(--brand);
+  color: #fff;
+  border: 0;
+}
+
+.hero .tileLabel {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hero .tileValue {
+  font-size: 38px;
+}
+
+.delta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.delta b {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* ─── Grids ───────────────────────────────────────────────── */
+.row21 {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.row11 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.panel {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ─── Chart ───────────────────────────────────────────────── */
+.chartCard {
+  padding: 22px 22px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--brand);
+}
+
+.dash {
+  width: 12px;
+  height: 0;
+  border-top: 2px dashed var(--ink);
+}
+
+.chartBody {
+  display: flex;
+  gap: 10px;
+}
+
+.yAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 220px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  width: 40px;
+  flex: none;
+}
+
+.yAxis span {
+  line-height: 0;
+}
+
+.plotCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plot {
+  position: relative;
+  height: 220px;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.grid div {
+  height: 1px;
+  background: var(--line);
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--ink);
+  opacity: 0.25;
+}
+
+.dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid var(--brand);
+  transform: translate(-50%, -50%);
+}
+
+.tip {
+  position: absolute;
+  top: -6px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 10px 30px -10px rgba(11, 42, 51, 0.5);
+}
+
+.tipLabel {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tipRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.tipRow b {
+  font-family: var(--font-mono), monospace;
+  font-weight: 500;
+}
+
+.hit {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+}
+
+.xAxis {
+  position: relative;
+  height: 16px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.xAxis span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* ─── Tax by code ─────────────────────────────────────────── */
+.codes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.codeRow {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.codeHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.codeName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.amt {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.bar {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.bar > * {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: var(--brand);
+  transition: width 0.4s;
+}
+
+.small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.withholding {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.withholding b {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ─── Transaction types ───────────────────────────────────── */
+.stacked {
+  display: flex;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.stacked div {
+  height: 100%;
+  transition: width 0.4s;
+}
+
+.ttRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.ttSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.ttName {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.ttName b {
+  font-family: var(--font-mono), monospace;
+  font-weight: 500;
+}
+
+.ttName span,
+.ttDocs {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.ttAmt {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  min-width: 120px;
+  text-align: right;
+}
+
+/* ─── Branches ────────────────────────────────────────────── */
+.branches {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.branch {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  border: 1px solid var(--line);
+  background: #fff;
+  text-align: left;
+  color: var(--ink);
+  width: 100%;
+}
+
+.branch[aria-pressed="true"] {
+  border-color: var(--brand);
+}
+
+.branch[data-dim="true"] {
+  opacity: 0.45;
+}
+
+.branchHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.branchName {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.defaultTag {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  background: var(--tint-1);
+  color: var(--brand-dark);
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+.branchFoot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ─── Recent activity ─────────────────────────────────────── */
+.activity {
+  overflow: hidden;
+}
+
+.activityHead {
+  padding: 20px 22px;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+}
+
+.chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--ink);
+  color: #fff;
+}
+
+.actCols {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1.2fr) minmax(0, 1fr) 120px 130px 20px;
+  gap: 12px;
+  align-items: center;
+}
+
+.actLabels {
+  padding: 10px 22px;
+  background: var(--bg);
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.actRow {
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.actRow:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.kind {
+  justify-self: start;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.kind[data-kind="Invoice"] {
+  background: var(--tint-1);
+  color: var(--brand-dark);
+}
+
+.kind[data-kind="Receipt"] {
+  background: var(--neutral-chip);
+  color: var(--ink);
+}
+
+.kind[data-kind="Canceled"] {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cell > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.irn {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.when {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.total {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.struck {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.viewAll {
+  display: block;
+  padding: 14px 22px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ─── Quick actions & canceled ────────────────────────────── */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.quick {
+  background: var(--ink);
+  color: #fff;
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.quickTitle {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--tint-2);
+}
+
+.quickList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  text-align: left;
+  width: 100%;
+}
+
+.action:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.actionPrimary {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.actionPrimary:hover {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+}
+
+.actionIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.actionPrimary .actionIcon {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.actionText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.actionText b {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.actionText span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.actionPrimary .actionText span {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.lost {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 40px;
+  line-height: 1;
+  color: var(--danger);
+}
+
+.lostLine {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.reasons {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+
+.reasons div {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+}
+
+.reasons div:last-child {
+  border-bottom: 0;
+}
+
+.reasons dt {
+  color: var(--muted);
+}
+
+.reasons dd {
+  margin: 0;
+}
+
+@media (max-width: 1200px) {
+  .kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .row21,
+  .row11 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

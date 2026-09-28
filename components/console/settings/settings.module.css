@@ -1,0 +1,298 @@
+.layout {
+  display: flex;
+  flex: 1;
+  animation: eirs-rise 0.35s ease both;
+}
+
+.subnav {
+  width: 220px;
+  flex: none;
+  padding: 28px 16px;
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subnavTitle {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  padding: 0 12px 10px;
+}
+
+.group {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 14px 12px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.item:hover {
+  background: #fff;
+  color: var(--ink);
+}
+
+.item[aria-current="page"] {
+  background: #fff;
+  color: var(--brand-dark);
+  font-weight: 600;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ownerTag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 6px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.ribbon {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 28px;
+  align-items: center;
+  background: var(--tint-1);
+  border: 1px solid var(--tint-2);
+  border-radius: 16px;
+  padding: 26px 28px;
+}
+
+.ring {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+
+.ring svg {
+  width: 96px;
+  height: 96px;
+  transform: rotate(-90deg);
+}
+
+.ringLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 30px;
+}
+
+.ribbonText {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ribbonEyebrow {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--brand-dark);
+}
+
+.ribbonTitle {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 34px;
+  line-height: 1.05;
+}
+
+.ribbonTitle i {
+  color: var(--brand);
+}
+
+.steps {
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+
+.step:last-child {
+  border-bottom: 0;
+}
+
+.step[data-state="next"] {
+  background: var(--bg);
+}
+
+.badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--muted);
+  border: 1.5px solid var(--line);
+}
+
+.step[data-state="done"] .badge {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+
+.step[data-state="next"] .badge {
+  background: #fff;
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stepText b {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.step[data-state="done"] .stepText b,
+.step[data-state="next"] .stepText b {
+  color: var(--ink);
+}
+
+.stepText span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: var(--neutral-chip);
+  color: var(--muted);
+}
+
+.step[data-state="done"] .chip {
+  background: var(--tint-1);
+  color: var(--brand-dark);
+}
+
+.step[data-state="next"] .chip {
+  background: var(--ink);
+  color: #fff;
+}
+
+.stepLink {
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 84px;
+  text-align: right;
+  cursor: pointer;
+  color: var(--line);
+}
+
+.step[data-state="done"] .stepLink {
+  color: var(--muted);
+}
+
+.step[data-state="next"] .stepLink {
+  color: var(--brand);
+}
+
+.shortcuts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.shortcut:hover {
+  border-color: var(--brand);
+}
+
+.shortcutIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--tint-1);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.shortcutText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shortcutText b {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.shortcutText span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (max-width: 1100px) {
+  .shortcuts {
+    grid-template-columns: 1fr;
+  }
+}

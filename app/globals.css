@@ -11,6 +11,10 @@
   --muted: #4a6570;
   --placeholder: #9aaeb3;
   --danger: #b42318;
+  --danger-tint: #fdecea;
+  --danger-line: #f3c5bf;
+  --danger-ink: #7a2a20;
+  --neutral-chip: #eef1f2;
 
   --shadow-card: 0 20px 50px -24px rgba(11, 42, 51, 0.3);
   --shadow-lift: 0 40px 80px -30px rgba(11, 42, 51, 0.35);
@@ -106,6 +110,15 @@ input::placeholder {
   0% { transform: translateY(-4px); }
   50% { transform: translateY(58px); }
   100% { transform: translateY(-4px); }
+}
+
+@keyframes eirs-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes eirs-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
