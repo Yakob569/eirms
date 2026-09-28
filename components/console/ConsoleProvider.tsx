@@ -2,8 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { RangeKey } from "@/lib/dashboard";
-import type { BranchKey, Cancellation, Invoice } from "@/lib/merchant";
-import { INITIAL_INVOICES, readiness } from "@/lib/merchant";
+import type { BranchKey, Cancellation, CatalogItem, Invoice, Receipt, WithholdingRecord } from "@/lib/merchant";
+import { INITIAL_CATALOG, INITIAL_INVOICES, INITIAL_RECEIPTS, INITIAL_WITHHOLDING, readiness } from "@/lib/merchant";
 
 /** Minimum time the see-through loader stays up while talking to MoR. */
 export const WORK_MS = 1700;
@@ -16,6 +16,12 @@ type Persisted = {
   created: Invoice[];
   /** Cancellations recorded in this session, by invoice id. */
   cancels: Record<string, Cancellation>;
+  /** Receipts registered in this session. */
+  createdReceipts: Receipt[];
+  /** The items catalog, including edits made in this session. */
+  catalog: CatalogItem[];
+  /** Certificates marked received in this session, by withholding id. */
+  certs: Record<string, boolean>;
 };
 
 type ConsoleValue = Persisted & {
@@ -25,18 +31,38 @@ type ConsoleValue = Persisted & {
   busy: { message: string; detail: string } | null;
   invoices: Invoice[];
   getInvoice: (id: string) => Invoice | undefined;
+  /** Receipts, newest first; linked receipts carry the invoice's buyer. */
+  receipts: ConsoleReceipt[];
+  getReceipt: (id: string) => ConsoleReceipt | undefined;
+  withholding: WithholdingRecord[];
   setupDone: number;
   setBranch: (b: BranchKey) => void;
   setRange: (r: RangeKey) => void;
   toggleSidebar: () => void;
   addInvoice: (inv: Invoice) => void;
   markCanceled: (id: string, c: Cancellation) => void;
+  addReceipt: (r: Receipt) => void;
+  /** Replaces the item with the same code, or adds it at the top. */
+  putItem: (item: CatalogItem) => void;
+  markCertificate: (id: string) => void;
   /** Shows the see-through loader while `task` runs (at least WORK_MS). */
   work: <T>(message: string, detail: string, task: () => Promise<T>) => Promise<T>;
 };
 
+/** A receipt with its buyer resolved (linked receipts take the invoice's buyer). */
+export type ConsoleReceipt = Receipt & { buyer: NonNullable<Receipt["buyer"]> };
+
 const STORAGE_KEY = "eirs.console";
-const initial: Persisted = { branch: "all", range: "d7", collapsed: false, created: [], cancels: {} };
+const initial: Persisted = {
+  branch: "all",
+  range: "d7",
+  collapsed: false,
+  created: [],
+  cancels: {},
+  createdReceipts: [],
+  catalog: INITIAL_CATALOG,
+  certs: {},
+};
 
 const ConsoleContext = createContext<ConsoleValue | null>(null);
 
@@ -72,6 +98,20 @@ export function ConsoleProvider({ children }: { children: React.ReactNode }) {
     [state.created, state.cancels],
   );
 
+  const receipts = useMemo(
+    () =>
+      [...state.createdReceipts, ...INITIAL_RECEIPTS].map((r) => ({
+        ...r,
+        buyer: r.buyer ?? invoices.find((v) => v.id === r.linkedInvoiceId)?.buyer ?? { name: "—" },
+      })),
+    [state.createdReceipts, invoices],
+  );
+
+  const withholding = useMemo(
+    () => INITIAL_WITHHOLDING.map((w) => ({ ...w, certificateReceived: state.certs[w.id] ?? w.certificateReceived })),
+    [state.certs],
+  );
+
   const work = useCallback(async <T,>(message: string, detail: string, task: () => Promise<T>) => {
     setBusy({ message, detail });
     try {
@@ -89,15 +129,24 @@ export function ConsoleProvider({ children }: { children: React.ReactNode }) {
       busy,
       invoices,
       getInvoice: (id) => invoices.find((v) => v.id === id),
+      receipts,
+      getReceipt: (id) => receipts.find((r) => r.id === id),
+      withholding,
       setupDone: Math.max(0, Math.min(5, readiness().done)),
       setBranch: (branch) => patch({ branch }),
       setRange: (range) => patch({ range }),
       toggleSidebar: () => patch((s) => ({ collapsed: !s.collapsed })),
       addInvoice: (inv) => patch((s) => ({ created: [inv, ...s.created] })),
       markCanceled: (id, c) => patch((s) => ({ cancels: { ...s.cancels, [id]: c } })),
+      addReceipt: (r) => patch((s) => ({ createdReceipts: [r, ...s.createdReceipts] })),
+      putItem: (item) =>
+        patch((s) => ({
+          catalog: s.catalog.some((x) => x.code === item.code) ? s.catalog.map((x) => (x.code === item.code ? item : x)) : [item, ...s.catalog],
+        })),
+      markCertificate: (id) => patch((s) => ({ certs: { ...s.certs, [id]: true } })),
       work,
     }),
-    [state, ready, busy, invoices, patch, work],
+    [state, ready, busy, invoices, receipts, withholding, patch, work],
   );
 
   return <ConsoleContext.Provider value={value}>{children}</ConsoleContext.Provider>;

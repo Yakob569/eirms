@@ -1,0 +1,284 @@
+/* Receipts — list and detail. Row, stat, filter, kv and proof styles come from
+   invoices.module.css; this file holds what differs. */
+
+/* Receipt-type pill; colors come from data-type. */
+.type {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.type[data-type="SALES"] {
+  background: var(--tint-1);
+  color: var(--brand-dark);
+}
+
+.type[data-type="PAYMENT"] {
+  background: var(--neutral-chip);
+  color: var(--ink);
+}
+
+.type[data-type="ADVANCE"] {
+  background: #fff3dc;
+  color: #8a5a00;
+}
+
+.type[data-type="REFUND"] {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+
+/* Rounded filter chip, tint when selected. */
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--tint-1);
+  color: var(--brand-dark);
+  border-color: var(--brand);
+}
+
+.cols {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr) 150px 20px;
+}
+
+.no {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pm {
+  font-size: 14px;
+}
+
+.pmSub {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Chip that opens the linked invoice from inside a clickable row. */
+.link {
+  align-self: flex-start;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--brand);
+  padding: 4px 8px;
+  border-radius: 7px;
+  border: 1px solid var(--tint-2);
+  background: var(--tint-1);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.link:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.none {
+  color: var(--muted);
+}
+
+.refund {
+  color: var(--danger);
+}
+
+/* ─── Detail ──────────────────────────────────────────────── */
+.detailGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.box {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.amount {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.boxKv {
+  margin-top: 6px;
+}
+
+.boxKv div {
+  padding: 8px 0;
+}
+
+.linked {
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.linked:hover,
+.linked:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  color: var(--ink);
+}
+
+.linkedHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.linkedNo {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.linkedMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.linkedMeta span:last-child {
+  font-family: var(--font-mono), monospace;
+  color: var(--ink);
+}
+
+.wht {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff3dc;
+  color: #6b4700;
+  font-size: 12px;
+  line-height: 1.4;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wht:hover {
+  background: #ffecc2;
+}
+
+.open {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.receivedName {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.itemCols {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 90px 110px 64px 120px;
+  gap: 12px;
+  align-items: center;
+}
+
+.totalsWrap {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px;
+}
+
+.totalsBox {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  margin: 0;
+}
+
+.totalsBox > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.totalsBox dt {
+  color: var(--muted);
+}
+
+.totalsBox dd {
+  margin: 0;
+  font-family: var(--font-mono), monospace;
+}
+
+.totalsBox .grand {
+  align-items: baseline;
+  padding: 10px 0 0;
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
+.totalsBox .grand dt {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.totalsBox .grand dd {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 28px;
+}
+
+.note {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--tint-1);
+  color: var(--brand-dark);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.note svg {
+  margin-top: 2px;
+}
+
+@media (max-width: 1200px) {
+  .detailGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -9,7 +9,7 @@ import { Icon, type IconName } from "./Icon";
 import { useConsoleRoute, type Section } from "./route";
 import s from "./shell.module.css";
 
-type NavItem = { key: Section | "terminal" | "receipts" | "items"; label: string; icon: IconName; href?: string; count?: number };
+type NavItem = { key: Section; label: string; icon: IconName; href: string; count?: number };
 
 export function Sidebar() {
   const { collapsed, toggleSidebar, range, branch, setupDone } = useConsole();
@@ -17,14 +17,14 @@ export function Sidebar() {
   const stats = useMemo(() => dashboardStats(range, branch), [range, branch]);
   const expanded = !collapsed;
 
-  // Terminal, Receipts and Items aren't designed yet, so they don't navigate.
+  // The branch terminal is a separate product for shared counter devices, so it isn't listed here.
   const nav: NavItem[] = [
     { key: "dashboard", label: "Dashboard", icon: "dashboard", href: "/dashboard" },
-    { key: "terminal", label: "Terminal", icon: "terminal" },
     { key: "invoices", label: "Invoices", icon: "invoice", href: "/invoices", count: stats.invoices },
-    { key: "receipts", label: "Receipts", icon: "receipt", count: stats.receipts },
+    { key: "receipts", label: "Receipts", icon: "receipt", href: "/receipts", count: stats.receipts },
     { key: "canceled", label: "Canceled invoices", icon: "canceled", href: "/canceled-invoices" },
-    { key: "items", label: "Items", icon: "items" },
+    { key: "items", label: "Items", icon: "items", href: "/items" },
+    { key: "withholding", label: "Withholding", icon: "withholding", href: "/withholding" },
     { key: "settings", label: "Settings", icon: "settings", href: "/settings" },
   ];
 
@@ -71,15 +71,9 @@ export function Sidebar() {
           return (
             <Fragment key={n.key}>
               {n.key === "settings" && <div className={s.navSep} />}
-              {n.href ? (
-                <Link href={n.href} className={s.navItem} data-active={section === n.key} title={n.label}>
-                  {inner}
-                </Link>
-              ) : (
-                <span className={s.navItem} aria-disabled title={n.label}>
-                  {inner}
-                </span>
-              )}
+              <Link href={n.href} className={s.navItem} data-active={section === n.key} title={n.label}>
+                {inner}
+              </Link>
             </Fragment>
           );
         })}

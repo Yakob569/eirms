@@ -14,6 +14,7 @@ import {
   isConsumerSale,
   lookupTin,
   registerInvoice,
+  type CatalogItem,
   type DocType,
   type InvoiceDraft,
   type TaxCode,
@@ -36,15 +37,6 @@ const TERMS = [
   ["IMMEDIATE", "Immediate"],
   ["NET 30", "Net 30"],
 ] as const;
-
-/** Frequently sold items, one tap to add as a line. */
-const QUICK_ADD: { label: string; price: number; code: TaxCode }[] = [
-  { label: "Laptop stand", price: 23213, code: "VAT15" },
-  { label: "Wireless keyboard", price: 1678, code: "VAT15" },
-  { label: "Coffee beans 1kg", price: 650, code: "VAT15" },
-  { label: "Delivery", price: 2300, code: "VAT0" },
-  { label: "Soft drinks case", price: 150, code: "EXC10" },
-];
 
 type Line = InvoiceDraft["lines"][number];
 const emptyLine = (): Line => ({ description: "", quantity: "1", unitPrice: "", taxCode: "VAT15" });
@@ -72,7 +64,9 @@ const numeric = (s: string) => s.replace(/[^0-9.]/g, "");
 
 export function RegisterInvoice() {
   const router = useRouter();
-  const { branch, invoices, addInvoice, work } = useConsole();
+  const { branch, invoices, catalog, addInvoice, work } = useConsole();
+  // One tap adds an active catalog item as a priced line.
+  const quickAdd = catalog.filter((c) => c.active).slice(0, 6);
   const [f, setF] = useState<InvoiceDraft>(EMPTY);
   const set = (patch: Partial<InvoiceDraft>) => setF((s) => ({ ...s, ...patch }));
   const setLine = (i: number, patch: Partial<Line>) => setF((s) => ({ ...s, lines: s.lines.map((l, j) => (j === i ? { ...l, ...patch } : l)) }));
@@ -96,8 +90,8 @@ export function RegisterInvoice() {
   const hasPricedLine = f.lines.some((l) => l.description && parseFloat(l.unitPrice) > 0);
   const valid = hasPricedLine && (consumer ? f.walkIn || !!f.name : !!f.name);
 
-  function quickAdd(q: (typeof QUICK_ADD)[number]) {
-    const line: Line = { description: q.label, quantity: "1", unitPrice: String(q.price), taxCode: q.code };
+  function addFromCatalog(c: CatalogItem) {
+    const line: Line = { description: c.description, quantity: "1", unitPrice: String(c.unitPrice), taxCode: c.taxCode };
     setF((s) => {
       const empty = s.lines.findIndex((l) => !l.description && !l.unitPrice);
       return { ...s, lines: empty >= 0 ? s.lines.map((l, j) => (j === empty ? line : l)) : [...s.lines, line] };
@@ -293,9 +287,9 @@ export function RegisterInvoice() {
               <span className={rg.hintRight}>Quick add from Items</span>
             </div>
             <div className={rg.quick}>
-              {QUICK_ADD.map((q) => (
-                <button key={q.label} type="button" className={rg.quickChip} onClick={() => quickAdd(q)}>
-                  + {q.label} <span>{fmt2(q.price)}</span>
+              {quickAdd.map((c) => (
+                <button key={c.code} type="button" className={rg.quickChip} onClick={() => addFromCatalog(c)}>
+                  + {c.description} <span>{fmt2(c.unitPrice)}</span>
                 </button>
               ))}
             </div>

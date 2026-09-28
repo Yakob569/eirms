@@ -2,7 +2,8 @@
 
 Next.js (App Router, TypeScript) frontend for EIRSPay: landing page, the
 merchant sign-in, sign-up and verification flow, and the merchant console
-(dashboard, invoices, Settings › Setup) that sign-in lands on.
+(dashboard, invoices, receipts, items, withholding, Settings › Setup) that
+sign-in lands on.
 
 ## Run it
 
@@ -28,6 +29,12 @@ npm run build      # production build
 | `/invoices/[id]`  | Invoice detail: proof of registration (IRN + QR), parties, lines, cancel |
 | `/invoices/[id]/receipt` | Printable fiscal receipt, A4 or 80mm     |
 | `/canceled-invoices` | Canceled invoices, cancel reason first        |
+| `/receipts`       | Sales receipts, filterable by branch, type, payment method, text |
+| `/receipts/new`   | Register receipt: sales / advance from the catalog, payment / refund against an invoice |
+| `/receipts/[id]`  | Receipt detail: payment details, linked invoice and withholding, lines, IRN + QR |
+| `/items`          | Items catalog with active switch; create / edit in a side drawer |
+| `/withholding`    | Withholding records with certificate status  |
+| `/withholding/[id]` | Calculation, related invoice and payment receipt, mark certificate received |
 | `/settings`       | Settings › Setup — fiscal-readiness checklist    |
 
 ## Where things live
@@ -43,8 +50,10 @@ npm run build      # production build
   state (branch, time range, session-registered and canceled documents)
   lives in `ConsoleProvider.tsx`.
 - `lib/merchant.ts` — **mock** merchant API (`listInvoices`,
-  `registerInvoice`, `cancelInvoice`, `lookupTin`, `readiness`) plus invoice
-  math (totals, tax breakdown, IRN/QR, amount in words).
+  `registerInvoice`, `cancelInvoice`, `lookupTin`, `readiness`, `listReceipts`,
+  `registerReceipt`, `listItems`, `saveItem`, `listWithholding`,
+  `markCertificateReceived`) plus document math (totals, tax breakdown,
+  receipt amounts net of withholding, IRN/QR, amount in words).
 - `lib/dashboard.ts` — **mock** `dashboardStats(range, branch)`. Replace with
   aggregation over invoices / receipts / cancellations, or an aggregate
   endpoint once volume grows.
@@ -59,8 +68,11 @@ stats are sample content from the design. Any 6-digit code verifies while
 `lib/auth.ts` is mocked. The language switch is display-only.
 
 Console figures, invoices, buyers, TINs and reason codes are sample data.
-Documents you register or cancel are kept in session storage for the tab.
+Documents you register or cancel, catalog edits and certificates you mark
+received are kept in session storage for the tab. Receipts, withholding
+records, the 2% rate and HS codes are sample data too.
 Set `readiness()` in `lib/merchant.ts` below 5 to see the setup notice.
-Not built yet: Terminal, Receipts, Items, the other Settings pages, Export,
-Download PDF and Register receipt. The Amharic receipt labels need a
+The branch terminal is a separate product and isn't part of this console.
+Not built yet: the other Settings pages, Export, Download PDF and a printable
+receipt layout (Print receipt uses the browser's print). The Amharic receipt labels need a
 native-speaker check.

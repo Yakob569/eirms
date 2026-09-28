@@ -20,7 +20,7 @@ const ACT_FILTERS: { key: "all" | Lowercase<ActivityKind>; label: string }[] = [
 ];
 
 export function Dashboard() {
-  const { range, setRange, branch, setBranch, setupDone, invoices } = useConsole();
+  const { range, setRange, branch, setBranch, setupDone, invoices, receipts } = useConsole();
   const [act, setAct] = useState<(typeof ACT_FILTERS)[number]["key"]>("all");
   const stats = useMemo(() => dashboardStats(range, branch), [range, branch]);
   const left = 5 - setupDone;
@@ -225,7 +225,9 @@ export function Dashboard() {
             <span />
           </div>
           {activity.map((a) => {
-            const match = invoices.find((v) => `INV-${v.number}` === a.number);
+            const inv = invoices.find((v) => `INV-${v.number}` === a.number);
+            const rcp = receipts.find((r) => `RCP-${r.number}` === a.number);
+            const href = inv ? `/invoices/${inv.id}` : rcp ? `/receipts/${rcp.id}` : null;
             const cells = (
               <>
                 <span className={d.kind} data-kind={a.kind}>
@@ -246,9 +248,8 @@ export function Dashboard() {
                 <Icon name="chevronRight" size={14} stroke="var(--muted)" />
               </>
             );
-            // Receipts don't have a detail page in the console yet.
-            return match ? (
-              <Link key={a.number} href={`/invoices/${match.id}`} className={`${d.actCols} ${d.actRow}`}>
+            return href ? (
+              <Link key={a.number} href={href} className={`${d.actCols} ${d.actRow}`}>
                 {cells}
               </Link>
             ) : (
@@ -276,8 +277,7 @@ export function Dashboard() {
                 </span>
                 <Icon name="arrowRight" size={16} stroke="#fff" />
               </Link>
-              {/* Receipt registration isn't designed in the console yet. */}
-              <button type="button" className={d.action}>
+              <Link href="/receipts/new" className={d.action}>
                 <span className={d.actionIcon}>
                   <Icon name="receipt" size={18} stroke="#fff" strokeWidth={1.8} />
                 </span>
@@ -286,7 +286,7 @@ export function Dashboard() {
                   <span>Walk-in and point-of-sale</span>
                 </span>
                 <Icon name="arrowRight" size={16} stroke="#fff" />
-              </button>
+              </Link>
             </div>
           </div>
 

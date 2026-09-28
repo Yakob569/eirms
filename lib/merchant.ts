@@ -315,6 +315,279 @@ export async function lookupTin(tin: string): Promise<Pick<Party, "name" | "vat"
   return { name: "Dashen Trading PLC", vat: "2231009874", addr: "Addis Ababa · 03" };
 }
 
+// ─── Items catalog ─────────────────────────────────────────────────────────
+
+export type Nature = LineItem["nature"];
+
+export type CatalogItem = {
+  code: string;
+  description: string;
+  nature: Nature;
+  /** Harmonization (HS) code — required for goods. */
+  hsCode: string;
+  taxCode: TaxCode;
+  unit: string;
+  /** Excluding tax. */
+  unitPrice: number;
+  active: boolean;
+  category: string;
+};
+
+export const UNITS = ["PCS", "KG", "L", "BOX", "CASE", "HRS", "JOB"];
+
+export const TAX_CODE_NAMES: Record<TaxCode, string> = { VAT15: "Standard VAT 15%", VAT0: "Zero-rated", EXC10: "Excise 10%" };
+
+const cat = (
+  code: string,
+  description: string,
+  nature: Nature,
+  hsCode: string,
+  taxCode: TaxCode,
+  unit: string,
+  unitPrice: number,
+  active: boolean,
+  category: string,
+): CatalogItem => ({ code, description, nature, hsCode, taxCode, unit, unitPrice, active, category });
+
+const SAMPLE_CATALOG: CatalogItem[] = [
+  cat("ITM-0012", "Laptop stand, aluminium", "Goods", "7616.99.90", "VAT15", "PCS", 23213, true, "Electronics"),
+  cat("ITM-0031", "Wireless keyboard", "Goods", "8471.60.00", "VAT15", "PCS", 1678, true, "Electronics"),
+  cat("ITM-0044", "Monitor arm", "Goods", "8473.30.00", "VAT15", "PCS", 1500, true, "Electronics"),
+  cat("ITM-0210", "Cat6 cable, 305m box", "Goods", "8544.49.00", "VAT15", "BOX", 1200, true, "Electronics"),
+  cat("ITM-0301", "Ergonomic office chair", "Goods", "9401.30.00", "VAT15", "PCS", 1800, true, "Furniture"),
+  cat("ITM-0508", "Yirgacheffe coffee beans, 1kg", "Goods", "0901.11.00", "VAT15", "KG", 650, true, "Grocery"),
+  cat("ITM-0612", "Printed notebooks", "Goods", "4820.10.00", "VAT0", "PCS", 350, true, "Stationery"),
+  cat("ITM-0701", "Thermal receipt paper rolls", "Goods", "4811.90.00", "VAT15", "PCS", 85, true, "Stationery"),
+  cat("ITM-0815", "Imported soft drinks, case", "Goods", "2202.10.00", "EXC10", "CASE", 150, true, "Beverages"),
+  cat("SRV-0009", "Delivery and assembly", "Service", "", "VAT0", "JOB", 2300, true, "Services"),
+  cat("SRV-0102", "Network cabling installation", "Service", "", "VAT15", "JOB", 30000, true, "Services"),
+  cat("SRV-0110", "POS integration consulting", "Service", "", "VAT15", "HRS", 1250, true, "Services"),
+  cat("ITM-0099", "Fax machine toner", "Goods", "8443.99.00", "VAT15", "PCS", 2400, false, "Electronics"),
+];
+
+export async function listItems(): Promise<CatalogItem[]> {
+  return SAMPLE_CATALOG;
+}
+
+export const INITIAL_CATALOG = SAMPLE_CATALOG;
+
+/** Creates or updates a catalog item. Registered documents keep their original lines. */
+export async function saveItem(item: CatalogItem): Promise<CatalogItem> {
+  await delay(200);
+  return item;
+}
+
+export const grossPrice = (it: Pick<CatalogItem, "unitPrice" | "taxCode">) => it.unitPrice * (1 + TAX_RATES[it.taxCode].rate);
+
+// ─── Receipts ──────────────────────────────────────────────────────────────
+
+export type ReceiptType = "SALES" | "PAYMENT" | "ADVANCE" | "REFUND";
+export type PaymentMethod = "CASH" | "CHEQUE" | "BANK_TRANSFER" | "MOBILE_MONEY" | "CARD";
+
+export type Receipt = {
+  id: string;
+  number: string;
+  receiptType: ReceiptType;
+  paymentMethod: PaymentMethod;
+  /** Mobile-money provider (telebirr, M-Pesa…). */
+  provider?: string;
+  /** Cheque no., transfer reference, mobile-money transaction ID or masked card. */
+  reference?: string;
+  /** Cash handed over, for change due. */
+  tendered?: number;
+  /** Payment / refund receipts: amount against the linked invoice. */
+  amount?: number;
+  linkedInvoiceId?: string;
+  date: string;
+  time: string;
+  branch: BranchName;
+  sourceSystem: string;
+  /** Omitted on linked receipts — the buyer comes from the invoice. */
+  buyer?: Party;
+  /** Sales and advance receipts carry their own lines. */
+  items?: LineItem[];
+};
+
+export const RECEIPT_TYPES: { code: ReceiptType; label: string; desc: string }[] = [
+  { code: "SALES", label: "Sales", desc: "Paid at the counter for goods or services" },
+  { code: "PAYMENT", label: "Payment", desc: "Settles an invoice issued on credit" },
+  { code: "ADVANCE", label: "Advance", desc: "Deposit before goods or services are delivered" },
+  { code: "REFUND", label: "Refund", desc: "Money returned against an earlier invoice" },
+];
+
+export const RECEIPT_TYPE_LABEL = Object.fromEntries(RECEIPT_TYPES.map((t) => [t.code, t.label])) as Record<ReceiptType, string>;
+
+export const PAYMENT_METHODS: { code: PaymentMethod; label: string }[] = [
+  { code: "CASH", label: "Cash" },
+  { code: "CHEQUE", label: "Cheque" },
+  { code: "BANK_TRANSFER", label: "Bank transfer" },
+  { code: "MOBILE_MONEY", label: "Mobile money" },
+  { code: "CARD", label: "Card" },
+];
+
+export const PAYMENT_LABEL = Object.fromEntries(PAYMENT_METHODS.map((m) => [m.code, m.label])) as Record<PaymentMethod, string>;
+
+export const MOBILE_PROVIDERS = ["telebirr", "M-Pesa", "CBE Birr", "HelloCash"];
+
+/** Sales and advance receipts list items; payment and refund receipts point at an invoice. */
+export const receiptHasItems = (t: ReceiptType) => t === "SALES" || t === "ADVANCE";
+
+const WALK_IN: Party = { name: "Walk-in Customer" };
+
+const SAMPLE_RECEIPTS: Receipt[] = [
+  {
+    id: "RCP-A2291", number: "2291", receiptType: "SALES", paymentMethod: "CASH", tendered: 1000,
+    date: "2026-09-24", time: "10:31", branch: "Bole", sourceSystem: "5054087CDF", buyer: WALK_IN,
+    items: [
+      item("Yirgacheffe coffee beans, 1kg", "ITM-0508", "Goods", "KG", 1, 650, "VAT15"),
+      item("Printed notebooks", "ITM-0612", "Goods", "PCS", 1, 100, "VAT0"),
+    ],
+  },
+  {
+    id: "RCP-A2290", number: "2290", receiptType: "SALES", paymentMethod: "MOBILE_MONEY", provider: "telebirr", reference: "TB7Q2K91XZ",
+    date: "2026-09-24", time: "08:47", branch: "Piassa", sourceSystem: "9A1C44B0E2", buyer: WALK_IN,
+    items: [
+      item("Imported soft drinks, case", "ITM-0815", "Goods", "CASE", 2, 150, "EXC10"),
+      item("Thermal receipt paper rolls", "ITM-0701", "Goods", "PCS", 1, 85, "VAT15"),
+    ],
+  },
+  {
+    id: "RCP-A2289", number: "2289", receiptType: "PAYMENT", paymentMethod: "BANK_TRANSFER", reference: "FT26267AB91C", linkedInvoiceId: "INV-B3N5M7Q9WE",
+    date: "2026-09-23", time: "14:36", branch: "Bole", sourceSystem: "5054087CDF",
+  },
+  {
+    id: "RCP-A2288", number: "2288", receiptType: "SALES", paymentMethod: "CARD", reference: "•••• 4417",
+    date: "2026-09-23", time: "10:15", branch: "Bole", sourceSystem: "5054087CDF", buyer: { name: "Hanna Tesfaye", phone: "+251911238840" },
+    items: [item("Wireless keyboard", "ITM-0031", "Goods", "PCS", 1, 1678, "VAT15")],
+  },
+  {
+    id: "RCP-A2287", number: "2287", receiptType: "ADVANCE", paymentMethod: "CHEQUE", reference: "CBE 00482913",
+    date: "2026-09-22", time: "16:02", branch: "Main Branch", sourceSystem: "2EC77ABF63", buyer: { name: "Zemen Bank S.C", tin: "0005581342" },
+    items: [item("Advance: network cabling, phase 1", "SRV-0102", "Service", "JOB", 1, 15000, "VAT15")],
+  },
+  {
+    id: "RCP-A2286", number: "2286", receiptType: "REFUND", paymentMethod: "CASH", amount: 747.5, linkedInvoiceId: "INV-P0O9I8U7YT",
+    date: "2026-09-22", time: "15:20", branch: "Piassa", sourceSystem: "9A1C44B0E2",
+  },
+  {
+    id: "RCP-A2285", number: "2285", receiptType: "PAYMENT", paymentMethod: "CHEQUE", reference: "Awash 11029384", linkedInvoiceId: "INV-Z8X6C4V2BN",
+    date: "2026-09-24", time: "11:40", branch: "Main Branch", sourceSystem: "2EC77ABF63",
+  },
+];
+
+export async function listReceipts(): Promise<Receipt[]> {
+  return SAMPLE_RECEIPTS;
+}
+
+export const INITIAL_RECEIPTS = SAMPLE_RECEIPTS;
+
+export type ReceiptDraft = {
+  receiptType: ReceiptType;
+  paymentMethod: PaymentMethod;
+  /** Catalog lines (sales / advance). */
+  lines: { code: string; quantity: number }[];
+  /** Linked invoice (payment / refund). */
+  linkedInvoiceId: string | null;
+  amount: string;
+  walkIn: boolean;
+  name: string;
+  /** Phone, or a 10-digit TIN. */
+  phoneOrTin: string;
+  reference: string;
+  provider: string;
+  tendered: string;
+};
+
+/** Submits a receipt to MoR; resolves with the signed document. */
+export async function registerReceipt(
+  draft: ReceiptDraft,
+  ctx: { branch: BranchName; nextNumber: string; catalog: CatalogItem[]; total: number },
+): Promise<Receipt> {
+  await delay(400);
+  const now = new Date();
+  const withItems = receiptHasItems(draft.receiptType);
+  const byCode = new Map(ctx.catalog.map((c) => [c.code, c]));
+  const id = draft.phoneOrTin.trim();
+  return {
+    id: `RCP-N${Date.now().toString(36).toUpperCase()}`,
+    number: ctx.nextNumber,
+    receiptType: draft.receiptType,
+    paymentMethod: draft.paymentMethod,
+    provider: draft.paymentMethod === "MOBILE_MONEY" ? draft.provider : undefined,
+    reference: draft.reference.trim() || undefined,
+    tendered: draft.paymentMethod === "CASH" ? parseFloat(draft.tendered) || ctx.total : undefined,
+    amount: withItems ? undefined : ctx.total,
+    linkedInvoiceId: withItems ? undefined : draft.linkedInvoiceId ?? undefined,
+    date: isoDate(now),
+    time: now.toTimeString().slice(0, 5),
+    branch: ctx.branch,
+    sourceSystem: "2EC77ABF63",
+    buyer: withItems
+      ? draft.walkIn
+        ? WALK_IN
+        : /^\d{10}$/.test(id)
+          ? { name: draft.name.trim(), tin: id }
+          : { name: draft.name.trim(), phone: id || undefined }
+      : undefined,
+    items: withItems
+      ? draft.lines.map((l) => {
+          const c = byCode.get(l.code)!;
+          return item(c.description, c.code, c.nature, c.unit, l.quantity, c.unitPrice, c.taxCode);
+        })
+      : undefined,
+  };
+}
+
+// ─── Withholding ───────────────────────────────────────────────────────────
+
+export type WithholdingRecord = {
+  /** Certificate number. */
+  id: string;
+  invoiceId: string;
+  rate: number;
+  date: string;
+  period: string;
+  certificateReceived: boolean;
+};
+
+const SAMPLE_WITHHOLDING: WithholdingRecord[] = [
+  { id: "WHT-2026-004417", invoiceId: "INV-Z8X6C4V2BN", rate: 0.02, date: "2026-09-24", period: "Sep 2026", certificateReceived: true },
+  { id: "WHT-2026-004392", invoiceId: "INV-R4T6Y8U1IO", rate: 0.02, date: "2026-09-24", period: "Sep 2026", certificateReceived: false },
+  { id: "WHT-2026-004310", invoiceId: "INV-B3N5M7Q9WE", rate: 0.02, date: "2026-09-23", period: "Sep 2026", certificateReceived: true },
+  { id: "WHT-2026-004188", invoiceId: "INV-L5K4J3H2GF", rate: 0.02, date: "2026-09-21", period: "Sep 2026", certificateReceived: false },
+];
+
+export async function listWithholding(): Promise<WithholdingRecord[]> {
+  return SAMPLE_WITHHOLDING;
+}
+
+export const INITIAL_WITHHOLDING = SAMPLE_WITHHOLDING;
+
+export async function markCertificateReceived(id: string): Promise<void> {
+  await delay(200);
+  void id;
+}
+
+/** Withheld on the taxable base (excl. VAT). */
+export const withheldAmount = (w: WithholdingRecord, inv: Pick<Invoice, "items">) => totals(inv).subtotal * w.rate;
+
+/**
+ * What a receipt is worth. Item receipts total their lines; linked receipts use
+ * their amount, or default to the invoice total less anything the buyer withheld.
+ */
+export function receiptTotals(
+  r: Receipt,
+  getInvoice: (id: string) => Invoice | undefined,
+  withholding: WithholdingRecord[],
+): Totals & { invoice?: Invoice; withholding?: WithholdingRecord; withheld: number } {
+  if (r.items) return { ...totals({ items: r.items }), withheld: 0 };
+  const invoice = r.linkedInvoiceId ? getInvoice(r.linkedInvoiceId) : undefined;
+  const w = r.receiptType === "PAYMENT" ? withholding.find((x) => x.invoiceId === r.linkedInvoiceId) : undefined;
+  const withheld = w && invoice ? withheldAmount(w, invoice) : 0;
+  const amt = r.amount ?? (invoice ? totals(invoice).grandTotal - withheld : 0);
+  return { lines: [], subtotal: amt, taxTotal: 0, grandTotal: amt, taxes: [], invoice, withholding: w, withheld };
+}
+
 // ─── Derived values ────────────────────────────────────────────────────────
 
 export type Totals = {
@@ -431,6 +704,12 @@ export const etb = (n: number) => `ETB ${fmt2(n)}`;
 export function fmtIssued(date: string, time: string): string {
   const [y, m, d] = date.split("-");
   return `${+d} ${MONTHS[+m - 1]} ${y}, ${time}`;
+}
+
+/** "24 Sep 2026" */
+export function fmtDay(date: string): string {
+  const [y, m, d] = date.split("-");
+  return `${+d} ${MONTHS[+m - 1]} ${y}`;
 }
 
 function fmtDateTime(d: Date): string {

@@ -189,10 +189,6 @@
   font-weight: 600;
 }
 
-.navItem[aria-disabled="true"] {
-  cursor: default;
-}
-
 .aside[data-collapsed="true"] .navItem {
   justify-content: center;
 }
