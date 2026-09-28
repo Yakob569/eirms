@@ -81,3 +81,32 @@ export function Phone({ size = 20, stroke = "currentColor", strokeWidth = 2 }: I
     </svg>
   );
 }
+
+export function Eye({ size = 18, stroke = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <svg {...base(size, stroke, strokeWidth)}>
+      <path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+export function EyeOff({ size = 18, stroke = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <svg {...base(size, stroke, strokeWidth)}>
+      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+      <path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+      <path d="m2 2 20 20" />
+    </svg>
+  );
+}
+
+export function Lock({ size = 18, stroke = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <svg {...base(size, stroke, strokeWidth)}>
+      <rect width="18" height="11" x="3" y="11" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}

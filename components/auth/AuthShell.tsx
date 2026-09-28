@@ -19,9 +19,12 @@ function stepFor(pathname: string) {
   return 0;
 }
 
+/** Screens outside onboarding: they get the headline + receipt panel, not the step tracker. */
+const HERO_ROUTES = ["/signin", "/forgot-password", "/reset-password", "/change-password"];
+
 export function AuthShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isSignin = pathname.startsWith("/signin");
+  const isHero = HERO_ROUTES.some((r) => pathname.startsWith(r));
   const step = stepFor(pathname);
 
   return (
@@ -31,7 +34,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         <div className={styles.circleSm} />
         <Logo />
 
-        {isSignin ? <SigninHero /> : <StepProgress step={step} />}
+        {isHero ? <SigninHero /> : <StepProgress step={step} />}
 
         <div className={`mono ${styles.legal}`}>
           <Link href="#">PRIVACY</Link>
@@ -44,7 +47,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           <span className={styles.mobileLogo}>
             <Logo size="sm" />
           </span>
-          {!isSignin && <span className={`mono ${styles.mobileStep}`}>STEP {step + 1} OF 3</span>}
+          {!isHero && <span className={`mono ${styles.mobileStep}`}>STEP {step + 1} OF 3</span>}
           <div className={styles.lang}>
             <Globe />
             <span>አማርኛ</span>

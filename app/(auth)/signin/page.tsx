@@ -8,7 +8,7 @@ import { ArrowRight } from "@/components/icons";
 import { signIn } from "@/lib/auth";
 
 export default function SigninPage() {
-  const { runStep } = useAuthFlow();
+  const { runStep, update } = useAuthFlow();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +17,18 @@ export default function SigninPage() {
     e.preventDefault();
     setError(null);
     try {
-      await runStep("Signing you in", "Loading your merchant workspace", () => signIn(email, password), "/dashboard");
+      let mustChange = false;
+      await runStep(
+        "Signing you in",
+        "Loading your merchant workspace",
+        async () => {
+          const session = await signIn(email, password);
+          mustChange = session.mustChangePassword;
+          update({ session });
+        },
+        // Accounts on a temporary password must set their own before reaching the workspace.
+        () => (mustChange ? "/change-password" : "/dashboard"),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign in.");
     }
@@ -46,7 +57,7 @@ export default function SigninPage() {
         </label>
         <label className={f.label}>
           <span className={f.labelRow}>
-            Password <Link href="#">Forgot password?</Link>
+            Password <Link href="/forgot-password">Forgot password?</Link>
           </span>
           <input
             className={f.input}
