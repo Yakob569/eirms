@@ -1,0 +1,34 @@
+name: iOS
+
+# Builds and tests the native iOS app under ios/. Only runs when ios/ changes (or manually).
+on:
+  push:
+    paths: ["ios/**", ".github/workflows/ios.yml"]
+  pull_request:
+    paths: ["ios/**", ".github/workflows/ios.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Domain + Data package tests
+        run: swift test --package-path EIRSPayKit
+
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build app for the iOS Simulator
+        run: |
+          xcodebuild build \
+            -project EIRSPay.xcodeproj \
+            -scheme EIRSPay \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
