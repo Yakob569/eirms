@@ -63,7 +63,7 @@
 .cols {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr) 150px 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr) 150px 32px;
 }
 
 .no {

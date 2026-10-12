@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useConsole } from "./ConsoleProvider";
+import { settingsPage } from "./settings/SettingsLayout";
 
 export type Section = "dashboard" | "invoices" | "receipts" | "canceled" | "items" | "withholding" | "settings";
 
@@ -10,7 +11,7 @@ export function useConsoleRoute(): { section: Section; crumb1: string; crumb2: s
   const path = usePathname();
   const { getInvoice, getReceipt } = useConsole();
 
-  if (path.startsWith("/settings")) return { section: "settings", crumb1: "Settings", crumb2: "Setup" };
+  if (path.startsWith("/settings")) return { section: "settings", crumb1: "Settings", crumb2: settingsPage(path)?.label ?? "Setup" };
   if (path.startsWith("/canceled-invoices")) return { section: "canceled", crumb1: "Canceled invoices", crumb2: null };
   if (path === "/receipts/new") return { section: "receipts", crumb1: "Receipts", crumb2: "Register" };
   const rm = /^\/receipts\/([^/]+)/.exec(path);

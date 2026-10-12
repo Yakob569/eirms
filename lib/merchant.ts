@@ -4,7 +4,9 @@
 // and signatures below.
 
 export type Status = "ISSUED" | "PAID" | "WITHHELD" | "CANCELED";
-export type DocType = "INV" | "CRE" | "DEB";
+export type DocType = "INV" | "CRE" | "DEB" | "RTN" | "INT" | "FIN";
+/** Document types the standalone Register invoice page issues. */
+export type RegisterDocType = "INV" | "CRE" | "DEB";
 export type TransactionType = "B2B" | "B2C" | "B2G" | "G2B" | "G2C";
 export type TaxCode = "VAT15" | "VAT0" | "EXC10";
 export type BranchName = "Main Branch" | "Bole" | "Piassa";
@@ -52,7 +54,7 @@ export type Invoice = {
   buyer: Party;
   payment: { mode: string; term: string };
   items: LineItem[];
-  /** Credit / debit notes: why, and the invoice being amended. */
+  /** Credit / debit notes: why, and the invoice being amended. Interim / final invoices: the retainer they draw on. */
   amends?: { reason: string; previousId: string };
 };
 
@@ -66,7 +68,14 @@ export const TAX_RATES: Record<TaxCode, { rate: number; label: string }> = {
 
 export const TAX_CODES: TaxCode[] = ["VAT15", "VAT0", "EXC10"];
 
-export const DOC_NAMES: Record<DocType, string> = { INV: "Invoice", CRE: "Credit note", DEB: "Debit note" };
+export const DOC_NAMES: Record<DocType, string> = {
+  INV: "Invoice",
+  CRE: "Credit note",
+  DEB: "Debit note",
+  RTN: "Retainer",
+  INT: "Interim invoice",
+  FIN: "Final invoice",
+};
 
 export const TRANSACTION_TYPES: { code: TransactionType; name: string }[] = [
   { code: "B2C", name: "Business to consumer" },
@@ -240,6 +249,13 @@ const SAMPLE_INVOICES: Invoice[] = [
       item("Imported soft drinks, case", "ITM-0815", "Goods", "CASE", 12, 150, "EXC10"),
     ],
   },
+  {
+    id: "RTN-H7G6F5D4SA", number: "095", docType: "RTN", transactionType: "B2B", status: "ISSUED",
+    date: "2026-09-20", time: "09:40", branch: "Main Branch", sourceSystem: "2EC77ABF63",
+    buyer: { name: "Abyssinia Consulting PLC", tin: "0072214598", vat: "4410098812", phone: "+251116674400", email: "accounts@abyssiniaconsult.et", addr: "Addis Ababa · Wereda 08" },
+    payment: { mode: "BANK TRANSFER", term: "NET 30" },
+    items: [item("Retainer, Q4 POS support", "SRV-0200", "Service", "JOB", 1, 45000, "VAT15")],
+  },
 ];
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -252,8 +268,29 @@ export async function listInvoices(): Promise<Invoice[]> {
 /** Synchronous copy of the sample list, used to seed client state without a loading flash. */
 export const INITIAL_INVOICES = SAMPLE_INVOICES;
 
+/** One editable line in the item builder (Register invoice, interim / final invoice panel). */
+export type DraftLine = {
+  itemCode: string;
+  description: string;
+  nature: LineItem["nature"];
+  unit: string;
+  quantity: string;
+  unitPrice: string;
+  taxCode: TaxCode;
+};
+
+export const emptyDraftLine = (): DraftLine => ({ itemCode: "", description: "", nature: "Goods", unit: "PCS", quantity: "1", unitPrice: "", taxCode: "VAT15" });
+
+/** Priced lines become line items; blank codes get a placeholder. */
+export const draftLineItems = (lines: DraftLine[]): LineItem[] =>
+  lines
+    .filter((l) => l.description.trim() && parseFloat(l.unitPrice) > 0)
+    .map((l, i) =>
+      item(l.description.trim(), l.itemCode.trim() || `ITM-${900 + i}`, l.nature, l.unit.trim() || "PCS", parseFloat(l.quantity) || 1, parseFloat(l.unitPrice), l.taxCode),
+    );
+
 export type InvoiceDraft = {
-  docType: DocType;
+  docType: RegisterDocType;
   transactionType: TransactionType;
   walkIn: boolean;
   idType: IdType;
@@ -268,7 +305,7 @@ export type InvoiceDraft = {
   amendReason: string;
   paymentMode: string;
   paymentTerm: string;
-  lines: { description: string; quantity: string; unitPrice: string; taxCode: TaxCode }[];
+  lines: DraftLine[];
 };
 
 /** Submits a draft to MoR's real-time registration endpoint; resolves with the signed document. */
@@ -294,9 +331,24 @@ export async function registerInvoice(draft: InvoiceDraft, ctx: { branch: Branch
     amends: draft.docType !== "INV" ? { reason: draft.amendReason || "Amendment", previousId: "INV-FP95G9D7JG" } : undefined,
     buyer,
     payment: { mode: draft.paymentMode, term: draft.paymentTerm },
-    items: draft.lines
-      .filter((l) => l.description && parseFloat(l.unitPrice) > 0)
-      .map((l, i) => item(l.description, `ITM-${900 + i}`, "Goods", "PCS", parseFloat(l.quantity) || 1, parseFloat(l.unitPrice), l.taxCode)),
+    items: draftLineItems(draft.lines),
+  };
+}
+
+/** What a credit / debit note or an interim / final invoice carries; the rest comes from MoR. */
+export type DocumentRequest = Pick<Invoice, "docType" | "transactionType" | "branch" | "sourceSystem" | "buyer" | "payment" | "items" | "amends">;
+
+/** Registers a document raised from an existing one (row actions on the invoice list). */
+export async function registerDocument(req: DocumentRequest, ctx: { nextNumber: string }): Promise<Invoice> {
+  await delay(400);
+  const now = new Date();
+  return {
+    ...req,
+    id: `${req.docType}-NEW${Date.now().toString(36).toUpperCase()}`,
+    number: ctx.nextNumber,
+    status: "ISSUED",
+    date: isoDate(now),
+    time: now.toTimeString().slice(0, 5),
   };
 }
 

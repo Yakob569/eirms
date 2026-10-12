@@ -8,6 +8,7 @@ import { PAYMENT_LABEL, PAYMENT_METHODS, RECEIPT_TYPES, RECEIPT_TYPE_LABEL, bran
 import { useConsole, type ConsoleReceipt } from "../ConsoleProvider";
 import { Icon } from "../Icon";
 import iv from "../invoices/invoices.module.css";
+import { RowMenu } from "../RowMenu";
 import ui from "../ui.module.css";
 import rc from "./receipts.module.css";
 
@@ -41,6 +42,7 @@ export function ReceiptList() {
   const [q, setQ] = useState("");
   const [type, setType] = useState<"all" | ReceiptType>("all");
   const [pm, setPm] = useState<"all" | PaymentMethod>("all");
+  const [menuFor, setMenuFor] = useState<string | null>(null);
 
   const needle = q.trim().toLowerCase();
   const rows = receipts
@@ -143,6 +145,7 @@ export function ReceiptList() {
               role="link"
               tabIndex={0}
               className={`${rc.cols} ${iv.row}`}
+              data-menu-open={menuFor === r.id}
               onClick={() => router.push(href)}
               onKeyDown={(e) => e.key === "Enter" && router.push(href)}
             >
@@ -182,7 +185,15 @@ export function ReceiptList() {
                 <b className={r.receiptType === "REFUND" ? rc.refund : undefined}>{signed(r, t.grandTotal)}</b>
                 <span>{t.taxTotal ? `tax ${fmt2(t.taxTotal)}` : r.linkedInvoiceId ? "tax on invoice" : "no tax"}</span>
               </span>
-              <Icon name="chevronRight" size={15} stroke="var(--muted)" />
+              <RowMenu
+                label={`RCP-${r.number}`}
+                actions={[
+                  { label: "View details", onSelect: () => router.push(href) },
+                  // Only rows that already show a linked-invoice chip get this.
+                  ...(inv ? [{ label: `View linked invoice · INV-${inv.number}`, onSelect: () => router.push(`/invoices/${inv.id}`) }] : []),
+                ]}
+                onOpenChange={(open) => setMenuFor((cur) => (open ? r.id : cur === r.id ? null : cur))}
+              />
             </div>
           );
         })}

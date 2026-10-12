@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { BranchKey, Status, TransactionType } from "@/lib/merchant";
+import type { BranchKey, DocType, Invoice, Status, TransactionType } from "@/lib/merchant";
 import { branchName, etb, fmt2, fmtIssued, irnFor, shortIrn, totals } from "@/lib/merchant";
 import { useConsole } from "../ConsoleProvider";
 import { Icon } from "../Icon";
+import { RowMenu, type RowAction } from "../RowMenu";
 import ui from "../ui.module.css";
+import { DocumentPanel, type PanelKind } from "./DocumentPanels";
 import iv from "./invoices.module.css";
 import { partyIdLabel, useCopy } from "./shared";
 
@@ -35,7 +37,29 @@ export function InvoiceList({ mode }: { mode: "active" | "canceled" }) {
   const [status, setStatus] = useState<(typeof STATUS_SEG)[number]["key"]>("all");
   const [tt, setTt] = useState<(typeof TT_SEG)[number]>("all");
   const [copied, copy] = useCopy();
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [panel, setPanel] = useState<{ kind: PanelKind; source: Invoice } | null>(null);
   const canceled = mode === "canceled";
+
+  /** A live (not canceled) credit or debit note already raised against this invoice. */
+  const hasNote = (v: Invoice, dt: DocType) => invoices.some((x) => x.docType === dt && x.amends?.previousId === v.id && x.status !== "CANCELED");
+
+  /** Row actions depend on the document: INV gets notes + cancel, RTN gets interim / final, the rest just view. */
+  function actionsFor(v: Invoice): RowAction[] {
+    const href = `/invoices/${v.id}`;
+    const actions: RowAction[] = [{ label: "View details", onSelect: () => router.push(href) }];
+    if (v.status === "CANCELED") return actions;
+    if (v.docType === "INV") {
+      if (!hasNote(v, "CRE")) actions.push({ label: "Make credit note", onSelect: () => setPanel({ kind: "CRE", source: v }) });
+      if (!hasNote(v, "DEB")) actions.push({ label: "Make debit note", onSelect: () => setPanel({ kind: "DEB", source: v }) });
+      actions.push({ label: "Cancel invoice", danger: true, separated: true, onSelect: () => router.push(`${href}?cancel=1`) });
+    }
+    if (v.docType === "RTN") {
+      actions.push({ label: "Make interim invoice", onSelect: () => setPanel({ kind: "INT", source: v }) });
+      actions.push({ label: "Make final invoice", onSelect: () => setPanel({ kind: "FIN", source: v }) });
+    }
+    return actions;
+  }
 
   const scoped = invoices.filter((v) => branch === "all" || v.branch === branchName(branch));
   const pool = scoped.filter((v) => (canceled ? v.status === "CANCELED" : v.status !== "CANCELED"));
@@ -146,6 +170,7 @@ export function InvoiceList({ mode }: { mode: "active" | "canceled" }) {
               tabIndex={0}
               className={`${iv.cols} ${iv.row}`}
               data-mode={mode}
+              data-menu-open={menuFor === v.id}
               onClick={() => router.push(href)}
               onKeyDown={(e) => e.key === "Enter" && router.push(href)}
             >
@@ -198,12 +223,18 @@ export function InvoiceList({ mode }: { mode: "active" | "canceled" }) {
                 <b className={canceled ? iv.struck : undefined}>{etb(t.grandTotal)}</b>
                 <span>tax {fmt2(t.taxTotal)}</span>
               </span>
-              <Icon name="chevronRight" size={15} stroke="var(--muted)" />
+              <RowMenu
+                label={`${v.docType}-${v.number}`}
+                actions={actionsFor(v)}
+                onOpenChange={(open) => setMenuFor((cur) => (open ? v.id : cur === v.id ? null : cur))}
+              />
             </div>
           );
         })}
         {rows.length === 0 && <div className={ui.empty}>No documents match these filters.</div>}
       </div>
+
+      {panel && <DocumentPanel key={`${panel.kind}-${panel.source.id}`} kind={panel.kind} source={panel.source} onClose={() => setPanel(null)} />}
     </main>
   );
 }

@@ -372,6 +372,41 @@
   align-items: center;
 }
 
+/* Two-row line card (detailed builder in the interim / final invoice panel). */
+.lineCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.lineCard .input {
+  background: #fff;
+}
+
+.lineTop {
+  display: grid;
+  grid-template-columns: 18px 110px minmax(0, 1fr) 86px 30px;
+  gap: 8px;
+  align-items: center;
+}
+
+.lineBottom {
+  display: grid;
+  grid-template-columns: 96px 76px 64px minmax(0, 1fr) 150px;
+  gap: 8px;
+  align-items: center;
+  padding-left: 26px;
+}
+
+.lineNo {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .lineLabels {
   font-family: var(--font-mono), monospace;
   font-size: 10px;

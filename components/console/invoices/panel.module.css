@@ -1,0 +1,500 @@
+/* Side panels opened from invoice row actions. Rendered into <body> so they
+   always cover the viewport, whatever the list's scroll position. */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 42, 51, 0.38);
+  z-index: 60;
+  animation: fade 0.2s ease both;
+}
+
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(660px, 100vw);
+  background: var(--bg);
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -30px 0 60px -30px rgba(11, 42, 51, 0.5);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  animation: slide 0.25s ease both;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(32px);
+    opacity: 0;
+  }
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 28px 20px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.eyebrow {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--brand-dark);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  font-size: 34px;
+  line-height: 1.05;
+}
+
+.title i {
+  color: var(--brand);
+}
+
+.close {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--muted);
+  flex: none;
+}
+
+.close:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.lockedChips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lockedChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+}
+
+.lockedNote {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.body {
+  flex: 1;
+  overflow: auto;
+  padding: 22px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Sections keep their height; the body scrolls instead. */
+.body > * {
+  flex-shrink: 0;
+}
+
+/* ─── Credit / debit: read-only summary ─────────────────────── */
+.lockLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 18px;
+  min-width: 0;
+}
+
+.summary > div:nth-child(odd) {
+  border-right: 1px solid var(--line);
+}
+
+.summary > div:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--line);
+}
+
+.summaryKey {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+.summary b {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summaryMeta {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.sectionHead b {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sectionHead span {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.line {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  transition: all 0.15s;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+
+.line[data-on="true"] {
+  background: #fff;
+  border-color: var(--brand);
+}
+
+.lineToggle {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+  opacity: 0.55;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  color: var(--ink);
+  width: 100%;
+}
+
+.line[data-on="true"] .lineToggle {
+  opacity: 1;
+}
+
+.box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: #fff;
+  border: 1.5px solid #b9cbce;
+}
+
+.line[data-on="true"] .box {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.lineText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lineText b {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.lineMeta {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.lineOrig {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+}
+
+.lineOrig em {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.adjust {
+  display: grid;
+  grid-template-columns: 110px 140px 1fr;
+  gap: 12px;
+  align-items: end;
+  padding-left: 34px;
+}
+
+.adjust label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.numInput {
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 0 10px;
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+  min-width: 0;
+}
+
+.numInput:focus,
+.textarea:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--tint-1);
+}
+
+.adjustTotal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.adjustTotal b {
+  font-family: var(--font-mono), monospace;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.cap {
+  padding-left: 34px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.reason {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.textarea {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+  resize: vertical;
+}
+
+/* ─── Interim / final: full form cards ──────────────────────── */
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.cardHead b {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.cardHead span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.buyerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* ─── Footer ─────────────────────────────────────────────────── */
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 28px 22px;
+  background: #fff;
+  border-top: 1px solid var(--line);
+}
+
+.sums {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.sum {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+}
+
+.sum span:last-child {
+  font-family: var(--font-mono), monospace;
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+}
+
+.total b {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.total span {
+  font-family: var(--font-mono), monospace;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.total[data-credit="true"] span {
+  color: var(--danger);
+}
+
+.submitRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hint {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.hintDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background: #c9a227;
+}
+
+.hint[data-ready="true"] .hintDot {
+  background: var(--brand);
+}
+
+@media (max-width: 640px) {
+  .buyerGrid,
+  .summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .adjust {
+    grid-template-columns: 1fr 1fr;
+  }
+}

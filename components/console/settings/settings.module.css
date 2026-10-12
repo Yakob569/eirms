@@ -54,6 +54,16 @@
   font-weight: 600;
 }
 
+.item[data-soon="true"] {
+  color: var(--placeholder);
+  cursor: default;
+}
+
+.item[data-soon="true"]:hover {
+  background: transparent;
+  color: var(--placeholder);
+}
+
 .main {
   flex: 1;
   min-width: 0;
@@ -229,12 +239,15 @@
   font-weight: 600;
   min-width: 84px;
   text-align: right;
-  cursor: pointer;
   color: var(--line);
 }
 
-.step[data-state="done"] .stepLink {
-  color: var(--muted);
+a.stepLink {
+  color: var(--brand);
+}
+
+a.stepLink:hover {
+  color: var(--brand-dark);
 }
 
 .step[data-state="next"] .stepLink {
@@ -258,8 +271,104 @@
   cursor: pointer;
 }
 
+a.shortcut {
+  color: var(--ink);
+}
+
 .shortcut:hover {
   border-color: var(--brand);
+  color: var(--ink);
+}
+
+.shortcut[data-soon="true"] {
+  cursor: default;
+}
+
+.shortcut[data-soon="true"]:hover {
+  border-color: var(--line);
+}
+
+/* ─── Verification panel (Setup, Verify setup) ──────────────── */
+.verify {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 22px 24px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.verifyIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  background: var(--tint-1);
+  color: var(--brand);
+}
+
+.verifyIcon[data-ok="true"] {
+  background: var(--brand);
+  color: #fff;
+}
+
+.verifyText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.verifyTitle {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.verifyTitle i {
+  color: var(--brand);
+}
+
+.verifyText > span:last-child {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.verifyActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.verifyCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 24px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.verifyCenter .verifyIcon {
+  width: 56px;
+  height: 56px;
+}
+
+.verifyCenter .verifyTitle {
+  font-size: 30px;
+}
+
+.verifyCenter > span:nth-child(3) {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 440px;
 }
 
 .shortcutIcon {
@@ -295,4 +404,467 @@
   .shortcuts {
     grid-template-columns: 1fr;
   }
+}
+
+/* ─── Account ────────────────────────────────────────────────── */
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 24px;
+}
+
+.identityMark {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--tint-1);
+  color: var(--brand-dark);
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.identityText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.identityText b {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.identityText span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.identityGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+
+.identityGrid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 24px;
+}
+
+.identityGrid > div:nth-child(odd) {
+  border-right: 1px solid var(--line);
+}
+
+.identityGrid > div:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--line);
+}
+
+.identityGrid dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.identityGrid dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  flex-wrap: wrap;
+}
+
+.pwForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 22px 76px;
+  background: var(--bg);
+}
+
+.pwGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.sessionName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.eventIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tint-1);
+  color: var(--brand);
+}
+
+.eventIcon[data-bad="true"] {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+
+.event {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.event b {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.event span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ─── Verify setup probe ─────────────────────────────────────── */
+.probeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.probeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 22px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.probeLabel {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--brand-dark);
+}
+
+.probeRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.probeRow span:first-child {
+  color: var(--muted);
+}
+
+.probeRow span:last-child {
+  font-family: var(--font-mono), monospace;
+  text-align: right;
+}
+
+.probeItems {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) 140px;
+  gap: 16px;
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.probeItems:last-child {
+  border-bottom: 0;
+}
+
+.probeItems[data-head="true"] {
+  padding: 8px 22px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ─── Excise banner (Source systems) ─────────────────────────── */
+.excise {
+  display: grid;
+  grid-template-columns: 38px 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 24px;
+  border-radius: 16px;
+  background: var(--tint-1);
+  border: 1px solid var(--tint-2);
+}
+
+/* ─── Linked resources (Branch detail) ───────────────────────── */
+.linkedRow {
+  display: grid;
+  grid-template-columns: 38px 1fr auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 24px;
+}
+
+.linkedItem {
+  border-bottom: 1px solid var(--line);
+}
+
+.linkedItem:last-child {
+  border-bottom: 0;
+}
+
+.expand {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--muted);
+  background: none;
+  border: 0;
+}
+
+.expand:hover {
+  background: var(--bg);
+}
+
+.expand svg {
+  transition: transform 0.15s;
+}
+
+.expand[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+.linkedKeys {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 24px 14px 74px;
+}
+
+.linkedKey {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.linkedKey:hover {
+  background: var(--tint-1);
+  color: var(--ink);
+}
+
+.linkedKey b {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ─── API key reveal ─────────────────────────────────────────── */
+.reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px;
+  border-radius: 16px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.revealWarn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.revealRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.revealKey {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
+  word-break: break-all;
+  user-select: all;
+}
+
+.revealCopy {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 0;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+}
+
+.revealCopy:hover {
+  background: var(--tint-1);
+}
+
+.revealNote {
+  font-size: 13px;
+  color: #9fc3c7;
+}
+
+.users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 6px 0 4px;
+  border-radius: 999px;
+  background: var(--tint-1);
+  border: 1px solid var(--brand);
+  color: var(--brand-dark);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.userMark {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userRemove {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+
+.userRemove:hover {
+  background: var(--tint-2);
+}
+
+.assign {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.locked {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 18px 24px;
+  border-radius: 16px;
+  background: #fff3dc;
+  border: 1px solid #f1d9a8;
+  color: #7a4e00;
+}
+
+.locked b {
+  font-size: 15px;
+  font-weight: 600;
+  display: block;
+}
+
+.locked span {
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .pwGrid,
+  .probeGrid,
+  .identityGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pwForm {
+    padding-left: 24px;
+  }
+}
+
+.envSeg {
+  display: flex;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.envSeg button {
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 7px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.envSeg button:disabled {
+  cursor: default;
+}
+
+.envSeg button[aria-pressed="true"] {
+  background: var(--brand);
+  color: #fff;
 }

@@ -5,41 +5,39 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   ID_TYPES,
-  TAX_CODES,
-  TAX_RATES,
   TRANSACTION_TYPES,
   branchName,
+  emptyDraftLine,
   etb,
   fmt2,
   isConsumerSale,
   lookupTin,
   registerInvoice,
   type CatalogItem,
-  type DocType,
+  type DraftLine,
   type InvoiceDraft,
-  type TaxCode,
+  type RegisterDocType,
 } from "@/lib/merchant";
 import { useConsole } from "../ConsoleProvider";
 import { Icon } from "../Icon";
 import ui from "../ui.module.css";
+import { LineItemsEditor, draftTotals } from "./LineItems";
 import rg from "./register.module.css";
 
-const DOC_WORD: Record<DocType, string> = { INV: "invoice.", CRE: "credit note.", DEB: "debit note." };
+const DOC_WORD: Record<RegisterDocType, string> = { INV: "invoice.", CRE: "credit note.", DEB: "debit note." };
 
-const PAY_MODES = [
+export const PAY_MODES = [
   ["CASH", "Cash"],
   ["BANK TRANSFER", "Bank transfer"],
   ["MOBILE MONEY", "Mobile money"],
   ["CREDIT", "Credit"],
 ] as const;
 
-const TERMS = [
+export const TERMS = [
   ["IMMEDIATE", "Immediate"],
   ["NET 30", "Net 30"],
 ] as const;
 
-type Line = InvoiceDraft["lines"][number];
-const emptyLine = (): Line => ({ description: "", quantity: "1", unitPrice: "", taxCode: "VAT15" });
 
 const EMPTY: InvoiceDraft = {
   docType: "INV",
@@ -57,10 +55,8 @@ const EMPTY: InvoiceDraft = {
   amendReason: "",
   paymentMode: "CASH",
   paymentTerm: "IMMEDIATE",
-  lines: [emptyLine()],
+  lines: [emptyDraftLine()],
 };
-
-const numeric = (s: string) => s.replace(/[^0-9.]/g, "");
 
 export function RegisterInvoice() {
   const router = useRouter();
@@ -69,29 +65,26 @@ export function RegisterInvoice() {
   const quickAdd = catalog.filter((c) => c.active).slice(0, 6);
   const [f, setF] = useState<InvoiceDraft>(EMPTY);
   const set = (patch: Partial<InvoiceDraft>) => setF((s) => ({ ...s, ...patch }));
-  const setLine = (i: number, patch: Partial<Line>) => setF((s) => ({ ...s, lines: s.lines.map((l, j) => (j === i ? { ...l, ...patch } : l)) }));
 
   const consumer = isConsumerSale(f.transactionType);
   // New documents are registered against the selected branch (the default branch when viewing all).
   const branchForDoc = branchName(branch) ?? "Main Branch";
 
-  let subtotal = 0;
-  const byCode: Partial<Record<TaxCode, number>> = {};
-  const lineTotals = f.lines.map((l) => {
-    const pre = (parseFloat(l.quantity) || 0) * (parseFloat(l.unitPrice) || 0);
-    const tax = pre * TAX_RATES[l.taxCode].rate;
-    subtotal += pre;
-    if (pre) byCode[l.taxCode] = (byCode[l.taxCode] ?? 0) + tax;
-    return pre + tax;
-  });
-  const taxLines = (Object.entries(byCode) as [TaxCode, number][]).map(([k, v]) => ({ label: TAX_RATES[k].label, value: v }));
-  const grand = subtotal + taxLines.reduce((a, t) => a + t.value, 0);
+  const { subtotal, taxLines, grand } = draftTotals(f.lines);
 
   const hasPricedLine = f.lines.some((l) => l.description && parseFloat(l.unitPrice) > 0);
   const valid = hasPricedLine && (consumer ? f.walkIn || !!f.name : !!f.name);
 
   function addFromCatalog(c: CatalogItem) {
-    const line: Line = { description: c.description, quantity: "1", unitPrice: String(c.unitPrice), taxCode: c.taxCode };
+    const line: DraftLine = {
+      itemCode: c.code,
+      description: c.description,
+      nature: c.nature,
+      unit: c.unit,
+      quantity: "1",
+      unitPrice: String(c.unitPrice),
+      taxCode: c.taxCode,
+    };
     setF((s) => {
       const empty = s.lines.findIndex((l) => !l.description && !l.unitPrice);
       return { ...s, lines: empty >= 0 ? s.lines.map((l, j) => (j === empty ? line : l)) : [...s.lines, line] };
@@ -293,59 +286,7 @@ export function RegisterInvoice() {
                 </button>
               ))}
             </div>
-            <div className={`${rg.lineCols} ${rg.lineLabels}`}>
-              <span>DESCRIPTION</span>
-              <span style={{ textAlign: "right" }}>QTY</span>
-              <span style={{ textAlign: "right" }}>UNIT PRICE</span>
-              <span>TAX CODE</span>
-              <span style={{ textAlign: "right" }}>LINE TOTAL</span>
-              <span />
-            </div>
-            {f.lines.map((l, i) => (
-              <div key={i} className={rg.lineCols}>
-                <input
-                  className={`${rg.input} ${rg.lineInput}`}
-                  placeholder="Item or service"
-                  aria-label={`Line ${i + 1} description`}
-                  value={l.description}
-                  onChange={(e) => setLine(i, { description: e.target.value })}
-                />
-                <input
-                  className={`${rg.input} ${rg.lineInput} ${rg.num}`}
-                  inputMode="decimal"
-                  aria-label={`Line ${i + 1} quantity`}
-                  value={l.quantity}
-                  onChange={(e) => setLine(i, { quantity: numeric(e.target.value) })}
-                />
-                <input
-                  className={`${rg.input} ${rg.lineInput} ${rg.num}`}
-                  inputMode="decimal"
-                  aria-label={`Line ${i + 1} unit price`}
-                  value={l.unitPrice}
-                  onChange={(e) => setLine(i, { unitPrice: numeric(e.target.value) })}
-                />
-                <div className={rg.codes} role="group" aria-label={`Line ${i + 1} tax code`}>
-                  {TAX_CODES.map((c) => (
-                    <button key={c} type="button" aria-pressed={l.taxCode === c} onClick={() => setLine(i, { taxCode: c })}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-                <span className={rg.num}>{fmt2(lineTotals[i])}</span>
-                <button
-                  type="button"
-                  className={rg.remove}
-                  aria-label={`Remove line ${i + 1}`}
-                  onClick={() => setF((s) => ({ ...s, lines: s.lines.length > 1 ? s.lines.filter((_, j) => j !== i) : [emptyLine()] }))}
-                >
-                  <Icon name="x" size={14} />
-                </button>
-              </div>
-            ))}
-            <button type="button" className={rg.addLine} onClick={() => setF((s) => ({ ...s, lines: [...s.lines, emptyLine()] }))}>
-              <Icon name="plus" size={15} strokeWidth={2.2} />
-              Add line
-            </button>
+            <LineItemsEditor lines={f.lines} onChange={(lines) => set({ lines })} />
           </section>
 
           {/* 4 · Payment */}

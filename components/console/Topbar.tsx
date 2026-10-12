@@ -16,7 +16,7 @@ const BRANCH_OPTIONS: { key: BranchKey; label: string; sub: string }[] = [
 
 export function Topbar() {
   const router = useRouter();
-  const { branch, setBranch } = useConsole();
+  const { branch, setBranch, cred } = useConsole();
   const { crumb1, crumb2 } = useConsoleRoute();
   const [open, setOpen] = useState<"branch" | "user" | null>(null);
 
@@ -87,7 +87,7 @@ export function Topbar() {
 
       <div className={s.env}>
         <span className={s.envDot} />
-        MoR connected · DEV
+        MoR connected · {cred.env}
       </div>
 
       <div className={s.userAnchor}>
@@ -135,14 +135,14 @@ export function Topbar() {
               </div>
             </dl>
             <div className={s.userActions}>
-              <Link href="/settings" className={s.userAction} role="menuitem" onClick={() => setOpen(null)}>
+              <Link href="/settings/account" className={s.userAction} role="menuitem" onClick={() => setOpen(null)}>
                 <Icon name="user" size={16} strokeWidth={1.8} />
                 Account settings
               </Link>
-              <button type="button" className={s.userAction} role="menuitem">
+              <Link href="/settings/account" className={s.userAction} role="menuitem" onClick={() => setOpen(null)}>
                 <Icon name="lock" size={16} strokeWidth={1.8} />
                 Change password
-              </button>
+              </Link>
               <button type="button" className={s.userAction} role="menuitem">
                 <Icon name="globe" size={16} strokeWidth={1.8} />
                 Language

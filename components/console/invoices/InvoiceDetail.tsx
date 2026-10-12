@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { CANCEL_REASONS, DOC_NAMES, SELLER, cancelInvoice, etb, fmt2, fmtIssued, irnFor, totals, type Invoice } from "@/lib/merchant";
 import { useConsole } from "../ConsoleProvider";
 import { Icon } from "../Icon";
@@ -23,21 +24,28 @@ export function MissingInvoice({ ready }: { ready: boolean }) {
   );
 }
 
-export function InvoiceDetail({ id }: { id: string }) {
+export function InvoiceDetail({ id, openCancel }: { id: string; openCancel?: boolean }) {
   const { getInvoice, ready } = useConsole();
   const inv = getInvoice(id);
   if (!inv) return <MissingInvoice ready={ready} />;
-  return <Detail inv={inv} />;
+  return <Detail inv={inv} openCancel={openCancel} />;
 }
 
-function Detail({ inv }: { inv: Invoice }) {
+function Detail({ inv, openCancel }: { inv: Invoice; openCancel?: boolean }) {
+  const router = useRouter();
   const { getInvoice, markCanceled, work } = useConsole();
   const [copied, copy] = useCopy();
-  const [cancelOpen, setCancelOpen] = useState(false);
   const t = totals(inv);
   const irn = irnFor(inv.id);
   const isCanceled = inv.status === "CANCELED";
+  const [cancelOpen, setCancelOpen] = useState(!!openCancel && !isCanceled);
   const backHref = listHrefFor(inv);
+  const related = inv.amends ? getInvoice(inv.amends.previousId) : undefined;
+
+  // Drop ?cancel=1 once the dialog is up, so a reload doesn't reopen it.
+  useEffect(() => {
+    if (openCancel) router.replace(`/invoices/${inv.id}`, { scroll: false });
+  }, [openCancel, inv.id, router]);
 
   const side: { title: string; rows: [string, string][] }[] = [
     {
@@ -54,11 +62,11 @@ function Detail({ inv }: { inv: Invoice }) {
     ...(inv.amends
       ? [
           {
-            title: "AMENDS",
+            title: related?.docType === "RTN" ? "AGAINST RETAINER" : "AMENDS",
             rows: [
               ["Reason", inv.amends.reason],
               ["Previous IRN", `ETH-${irnFor(inv.amends.previousId).slice(0, 10)}…`],
-              ["Related doc", getInvoice(inv.amends.previousId)?.number ?? "—"],
+              ["Related doc", related ? `${related.docType}-${related.number}` : "—"],
             ] as [string, string][],
           },
         ]

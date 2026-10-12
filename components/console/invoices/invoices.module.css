@@ -91,11 +91,11 @@
 .cols {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 1fr) 160px 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 1fr) 160px 32px;
 }
 
 .cols[data-mode="canceled"] {
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) minmax(0, 1.6fr) minmax(0, 1fr) 160px 20px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) minmax(0, 1.6fr) minmax(0, 1fr) 160px 32px;
 }
 
 .colLabels {
@@ -129,6 +129,86 @@
   box-shadow: 0 10px 28px -16px rgba(11, 42, 51, 0.35);
   transform: translateY(-1px);
   outline: none;
+}
+
+/* A row whose ⋮ menu is open sits above the rows after it. */
+.row[data-menu-open="true"] {
+  position: relative;
+  z-index: 40;
+}
+
+/* ─── Row actions (⋮) ─────────────────────────────────────── */
+.kebabWrap {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.kebab {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.kebab:hover,
+.kebab[aria-expanded="true"] {
+  background: var(--tint-1);
+  color: var(--brand-dark);
+}
+
+.rowMenu {
+  position: absolute;
+  right: 0;
+  top: 38px;
+  width: 240px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px -20px rgba(11, 42, 51, 0.4);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+  z-index: 41;
+  animation: eirs-rise 0.15s ease both;
+}
+
+.rowMenuItem {
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 14px;
+  white-space: nowrap;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.rowMenuItem:hover {
+  background: var(--bg);
+}
+
+.rowMenuItem[data-danger="true"] {
+  color: var(--danger);
+}
+
+.rowMenuItem[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rowMenuSep {
+  height: 1px;
+  background: var(--line);
+  margin: 4px 6px;
 }
 
 .cell {

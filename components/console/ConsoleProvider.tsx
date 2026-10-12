@@ -4,6 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { RangeKey } from "@/lib/dashboard";
 import type { BranchKey, Cancellation, CatalogItem, Invoice, Receipt, WithholdingRecord } from "@/lib/merchant";
 import { INITIAL_CATALOG, INITIAL_INVOICES, INITIAL_RECEIPTS, INITIAL_WITHHOLDING, readiness } from "@/lib/merchant";
+import type { Credentials, Org, SellerProfile } from "@/lib/org";
+import { INITIAL_CREDENTIALS, INITIAL_ORG, INITIAL_SELLER, runSetupVerification } from "@/lib/org";
 
 /** Minimum time the see-through loader stays up while talking to MoR. */
 export const WORK_MS = 1700;
@@ -22,6 +24,12 @@ type Persisted = {
   catalog: CatalogItem[];
   /** Certificates marked received in this session, by withholding id. */
   certs: Record<string, boolean>;
+  /** Settings: branches, source systems, API keys, sessions and merchant excise. */
+  org: Org;
+  cred: Credentials;
+  seller: SellerProfile;
+  /** Setup verification passed in this session (completes setup, unlocks API keys). */
+  verified: boolean;
 };
 
 type ConsoleValue = Persisted & {
@@ -45,6 +53,16 @@ type ConsoleValue = Persisted & {
   /** Replaces the item with the same code, or adds it at the top. */
   putItem: (item: CatalogItem) => void;
   markCertificate: (id: string) => void;
+  updateOrg: (fn: (o: Org) => Org) => void;
+  setCred: (c: Credentials) => void;
+  setSeller: (p: SellerProfile) => void;
+  /** True while the setup probe is in flight. */
+  verifying: boolean;
+  /** Runs the setup probe (~1.6s); passing completes setup. */
+  runVerification: () => void;
+  /** A key secret created this session, shown once on that key's page. */
+  reveal: { id: string; secret: string } | null;
+  setReveal: (r: { id: string; secret: string } | null) => void;
   /** Shows the see-through loader while `task` runs (at least WORK_MS). */
   work: <T>(message: string, detail: string, task: () => Promise<T>) => Promise<T>;
 };
@@ -62,6 +80,10 @@ const initial: Persisted = {
   createdReceipts: [],
   catalog: INITIAL_CATALOG,
   certs: {},
+  org: INITIAL_ORG,
+  cred: INITIAL_CREDENTIALS,
+  seller: INITIAL_SELLER,
+  verified: false,
 };
 
 const ConsoleContext = createContext<ConsoleValue | null>(null);
@@ -70,6 +92,8 @@ export function ConsoleProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<Persisted>(initial);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState<{ message: string; detail: string } | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [reveal, setReveal] = useState<{ id: string; secret: string } | null>(null);
 
   // Restore across reloads within the tab.
   useEffect(() => {
@@ -122,6 +146,13 @@ export function ConsoleProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const runVerification = useCallback(() => {
+    setVerifying(true);
+    runSetupVerification()
+      .then((ok) => ok && patch({ verified: true }))
+      .finally(() => setVerifying(false));
+  }, [patch]);
+
   const value = useMemo<ConsoleValue>(
     () => ({
       ...state,
@@ -132,7 +163,7 @@ export function ConsoleProvider({ children }: { children: React.ReactNode }) {
       receipts,
       getReceipt: (id) => receipts.find((r) => r.id === id),
       withholding,
-      setupDone: Math.max(0, Math.min(5, readiness().done)),
+      setupDone: state.verified ? 5 : Math.max(0, Math.min(5, readiness().done)),
       setBranch: (branch) => patch({ branch }),
       setRange: (range) => patch({ range }),
       toggleSidebar: () => patch((s) => ({ collapsed: !s.collapsed })),
@@ -144,9 +175,16 @@ export function ConsoleProvider({ children }: { children: React.ReactNode }) {
           catalog: s.catalog.some((x) => x.code === item.code) ? s.catalog.map((x) => (x.code === item.code ? item : x)) : [item, ...s.catalog],
         })),
       markCertificate: (id) => patch((s) => ({ certs: { ...s.certs, [id]: true } })),
+      updateOrg: (fn) => patch((s) => ({ org: fn(s.org) })),
+      setCred: (cred) => patch({ cred }),
+      setSeller: (seller) => patch({ seller }),
+      verifying,
+      runVerification,
+      reveal,
+      setReveal,
       work,
     }),
-    [state, ready, busy, invoices, receipts, withholding, patch, work],
+    [state, ready, busy, invoices, receipts, withholding, patch, work, verifying, runVerification, reveal],
   );
 
   return <ConsoleContext.Provider value={value}>{children}</ConsoleContext.Provider>;
