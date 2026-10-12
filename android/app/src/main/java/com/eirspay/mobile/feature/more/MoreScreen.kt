@@ -27,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.eirspay.domain.model.SetupSteps
 import com.eirspay.domain.model.UserRole
+import com.eirspay.mobile.feature.settings.SettingsPage
 import com.eirspay.mobile.ui.designsystem.*
 import com.eirspay.mobile.ui.theme.Eirs
 import com.eirspay.mobile.ui.theme.EirsType
@@ -38,10 +39,11 @@ fun MoreTab(
     onOpenItems: () -> Unit,
     onOpenWithholding: () -> Unit,
     onOpenCanceledInvoices: () -> Unit,
+    onOpenSettings: (SettingsPage) -> Unit,
 ) {
     val vm: MoreViewModel = hiltViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
-    MoreContent(state, onStartTerminal, onOpenItems, onOpenWithholding, onOpenCanceledInvoices)
+    MoreContent(state, onStartTerminal, onOpenItems, onOpenWithholding, onOpenCanceledInvoices, onOpenSettings)
 }
 
 @Composable
@@ -51,15 +53,16 @@ private fun MoreContent(
     onOpenItems: () -> Unit,
     onOpenWithholding: () -> Unit,
     onOpenCanceled: () -> Unit,
+    onOpenSettings: (SettingsPage) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         TerminalCard(onStartTerminal)
         ToolsCard(state, onOpenItems, onOpenWithholding, onOpenCanceled)
         SectionLabel("FISCAL READINESS")
         ReadinessCard(state)
-        SetupStepper(state.setupDone)
+        SetupStepper(state.setupDone, onReview = onOpenSettings)
         SectionLabel("ALL SETTINGS")
-        SettingsCard(state)
+        SettingsCard(state, onOpenSettings)
     }
 }
 
@@ -171,14 +174,20 @@ private fun ReadinessCard(state: MoreUiState) {
     }
 }
 
+/** Where each readiness step is reviewed (the setup "Review" links). */
+private val StepPages = listOf(SettingsPage.MOR, SettingsPage.SELLER, SettingsPage.SOURCE_SYSTEMS, SettingsPage.VERIFY, SettingsPage.API_KEYS)
+
 @Composable
-private fun SetupStepper(done: Int) {
+private fun SetupStepper(done: Int, onReview: (SettingsPage) -> Unit) {
     val c = Eirs.colors
     EirsCard(padding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)) {
         SetupSteps.forEachIndexed { i, step ->
             val isDone = i < done
             val cur = i == done
-            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                Modifier.fillMaxWidth().height(IntrinsicSize.Min).plainClickable { StepPages.getOrNull(i)?.let(onReview) },
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
                 Column(Modifier.fillMaxHeight().padding(top = 14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         Modifier.size(32.dp).clip(CircleShape).background(if (isDone) c.brand else Color.White)
@@ -214,19 +223,33 @@ private fun SetupStepper(done: Int) {
 }
 
 @Composable
-private fun SettingsCard(state: MoreUiState) {
+private fun SettingsCard(state: MoreUiState, onOpen: (SettingsPage) -> Unit) {
     val c = Eirs.colors
     val uid = state.session?.user?.id?.let { if (it.length > 8) it.take(8) + "…" else it } ?: ""
-    val env = state.session?.merchant?.environment ?: "DEV"
-    val rows = listOf(
-        "Account" to uid, "MoR credentials" to env, "Seller profile" to "", "Branches" to state.branchCount.toString(),
-        "Departments" to "", "Source systems" to "4 active", "API keys" to "", "Team" to "2", "Roles" to "",
+    val org = state.settings
+    // Departments, Team and Roles don't open anything yet.
+    val rows: List<Triple<String, String, SettingsPage?>> = listOf(
+        Triple("Account", uid, SettingsPage.ACCOUNT),
+        Triple("MoR credentials", org?.credentials?.environment?.name ?: (state.session?.merchant?.environment ?: "DEV"), SettingsPage.MOR),
+        Triple("Seller profile", org?.seller?.legalName.orEmpty(), SettingsPage.SELLER),
+        Triple("Branches", state.branchCount.toString(), SettingsPage.BRANCHES),
+        Triple("Departments", "", null),
+        Triple("Source systems", "${org?.sourceSystems?.count { it.active } ?: 0} active", SettingsPage.SOURCE_SYSTEMS),
+        Triple("API keys", "${org?.apiKeys?.count { it.active } ?: 0} active", SettingsPage.API_KEYS),
+        Triple("Verify setup", if (state.setupVerified) "Verified" else "Not verified", SettingsPage.VERIFY),
+        Triple("Team", "2", null),
+        Triple("Roles", "", null),
     )
     EirsCard(padding = PaddingValues(0.dp)) {
-        rows.forEachIndexed { i, (label, meta) ->
-            ChevronRow(52.dp, divider = i < rows.lastIndex, onClick = { }) {
+        rows.forEachIndexed { i, (label, meta, page) ->
+            ChevronRow(52.dp, divider = i < rows.lastIndex, onClick = { page?.let(onOpen) }) {
                 Text(label, modifier = Modifier.weight(1f), style = EirsType.sans(15.sp), maxLines = 1)
-                if (meta.isNotEmpty()) Text(meta, style = EirsType.sans(13.sp).copy(color = c.muted, letterSpacing = 0.em), maxLines = 1)
+                if (meta.isNotEmpty()) {
+                    Text(
+                        meta, modifier = Modifier.widthIn(max = 150.dp), overflow = TextOverflow.Ellipsis,
+                        style = EirsType.sans(13.sp).copy(color = c.muted, letterSpacing = 0.em), maxLines = 1,
+                    )
+                }
             }
         }
     }

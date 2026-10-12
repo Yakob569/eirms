@@ -32,6 +32,7 @@ import com.eirspay.mobile.ui.designsystem.ChipRail
 import com.eirspay.mobile.ui.designsystem.ChipStyle
 import com.eirspay.mobile.ui.designsystem.EirsChip
 import com.eirspay.mobile.ui.designsystem.EmptyState
+import com.eirspay.mobile.ui.designsystem.KebabButton
 import com.eirspay.mobile.ui.designsystem.Fmt
 import com.eirspay.mobile.ui.designsystem.ListCard
 import com.eirspay.mobile.ui.designsystem.MonoText
@@ -97,6 +98,7 @@ fun InvoicesTabContent(showCanceledRequest: Int, onOpenInvoice: (String) -> Unit
             InvoiceCard(
                 inv, canceledMode = f.canceledMode, copied = copied.value == inv.id,
                 onCopy = { copy(inv.id, inv.irn) }, onOpen = { onOpenInvoice(inv.id) },
+                onActions = { vm.openActions(inv.id) },
             )
         }
         if (state.loaded && state.rows.isEmpty()) EmptyState("No documents match these filters.")
@@ -104,7 +106,14 @@ fun InvoicesTabContent(showCanceledRequest: Int, onOpenInvoice: (String) -> Unit
 }
 
 @Composable
-private fun InvoiceCard(inv: Invoice, canceledMode: Boolean, copied: Boolean, onCopy: () -> Unit, onOpen: () -> Unit) {
+private fun InvoiceCard(
+    inv: Invoice,
+    canceledMode: Boolean,
+    copied: Boolean,
+    onCopy: () -> Unit,
+    onOpen: () -> Unit,
+    onActions: () -> Unit,
+) {
     val c = Eirs.colors
     ListCard(onClick = onOpen) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -118,10 +127,13 @@ private fun InvoiceCard(inv: Invoice, canceledMode: Boolean, copied: Boolean, on
                 val (bg, fg) = statusColors(inv.status)
                 Badge(inv.status.name, bg, fg)
             }
-            MonoText(
-                Fmt.etb(inv.totals.grandTotal), size = 13.sp, weight = FontWeight.Medium, strike = canceledMode,
-                color = if (canceledMode) c.muted else c.ink, maxLines = 1,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                MonoText(
+                    Fmt.etb(inv.totals.grandTotal), size = 13.sp, weight = FontWeight.Medium, strike = canceledMode,
+                    color = if (canceledMode) c.muted else c.ink, maxLines = 1,
+                )
+                KebabButton(onClick = onActions)
+            }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(

@@ -141,10 +141,8 @@ class RegisterInvoiceViewModel @Inject constructor(
     private fun updateLine(key: Long, f: (LineDraft) -> LineDraft) =
         _state.update { s -> s.copy(lines = s.lines.map { if (it.key == key) f(it) else it }) }
 
-    fun setLineDescription(key: Long, v: String) = updateLine(key) { it.copy(description = v) }
-    fun setLineQuantity(key: Long, v: String) = updateLine(key) { it.copy(quantity = v.filter { c -> c.isDigit() || c == '.' }) }
-    fun setLinePrice(key: Long, v: String) = updateLine(key) { it.copy(price = v.filter { c -> c.isDigit() || c == '.' }) }
-    fun setLineTaxCode(key: Long, code: TaxCode) = updateLine(key) { it.copy(taxCode = code) }
+    /** Applies an edit from the shared line editor. */
+    fun replaceLine(line: LineDraft) = updateLine(line.key) { line }
 
     fun removeLine(key: Long) = _state.update { s ->
         s.copy(lines = if (s.lines.size > 1) s.lines.filter { it.key != key } else listOf(LineDraft(nextKey++)))

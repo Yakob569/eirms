@@ -28,6 +28,8 @@ fun ViewHeader(
     modifier: Modifier = Modifier,
     title: @Composable () -> Unit,
     trailing: @Composable (RowScope.() -> Unit)? = null,
+    /** Arrow for pages; a close (×) icon for task pages such as credit notes. */
+    backIcon: LineIconSpec = EirsIcons.ArrowLeft,
 ) {
     val c = Eirs.colors
     Row(
@@ -36,7 +38,7 @@ fun ViewHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        BackButton(onBack)
+        IconSquareButton(backIcon, onBack)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             if (eyebrow.isNotEmpty()) Eyebrow(eyebrow, size = 10.sp, tracking = 0.12)
             title()

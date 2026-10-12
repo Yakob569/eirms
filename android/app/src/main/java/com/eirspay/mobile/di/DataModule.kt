@@ -23,5 +23,6 @@ abstract class DataModule {
     @Binds @Singleton abstract fun withholding(impl: FakeWithholdingRepository): WithholdingRepository
     @Binds @Singleton abstract fun analytics(impl: FakeAnalyticsRepository): AnalyticsRepository
     @Binds @Singleton abstract fun taxpayers(impl: FakeTaxpayerRepository): TaxpayerRepository
+    @Binds @Singleton abstract fun settings(impl: FakeSettingsRepository): SettingsRepository
     @Binds @Singleton abstract fun preferences(impl: InMemoryPreferencesRepository): PreferencesRepository
 }

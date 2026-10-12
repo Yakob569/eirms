@@ -121,8 +121,9 @@ fun InvoiceDetailScreen(id: String, onBack: () -> Unit, onViewReceipt: (String) 
     }
 }
 
+/** "Cancel invoice" sheet body, shared by the detail page and the list's row actions. */
 @Composable
-private fun ColumnScope.CancelSheetContent(number: String, selected: CancelReason, onPick: (CancelReason) -> Unit, onConfirm: () -> Unit) {
+internal fun ColumnScope.CancelSheetContent(number: String, selected: CancelReason, onPick: (CancelReason) -> Unit, onConfirm: () -> Unit) {
     val c = Eirs.colors
     Text(
         buildAnnotatedString {

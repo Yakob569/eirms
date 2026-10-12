@@ -76,6 +76,9 @@ private fun docWord(t: DocumentType) = when (t) {
     DocumentType.INV -> "invoice."
     DocumentType.CRE -> "credit note."
     DocumentType.DEB -> "debit note."
+    DocumentType.RTN -> "retainer."
+    DocumentType.INT -> "interim invoice."
+    DocumentType.FIN -> "final invoice."
 }
 
 @Composable
@@ -238,74 +241,16 @@ private fun LinesCard(s: RegisterInvoiceUiState, vm: RegisterInvoiceViewModel) {
             }
         }
         s.lines.forEach { line ->
-            val shape = RoundedCornerShape(14.dp)
-            Column(
-                Modifier.fillMaxWidth().clip(shape).border(1.dp, c.line, shape).padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FormField(line.description, { vm.setLineDescription(line.key, it) }, placeholder = "Item or service", modifier = Modifier.weight(1f))
-                    Box(
-                        Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).plainClickable { vm.removeLine(line.key) },
-                        contentAlignment = Alignment.Center,
-                    ) { LineIcon(EirsIcons.Close, size = 15.dp, tint = c.muted) }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FormField(
-                        line.quantity, { vm.setLineQuantity(line.key, it) }, modifier = Modifier.width(72.dp),
-                        mono = true, textAlign = TextAlign.End, keyboardType = KeyboardType.Decimal, fontSize = 15.sp,
-                    )
-                    FormField(
-                        line.price, { vm.setLinePrice(line.key, it) }, modifier = Modifier.weight(1f), placeholder = "Unit price",
-                        mono = true, textAlign = TextAlign.End, keyboardType = KeyboardType.Decimal, fontSize = 15.sp,
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(
-                        Modifier.weight(1f).height(36.dp).clip(RoundedCornerShape(10.dp)).background(c.background)
-                            .border(1.dp, c.line, RoundedCornerShape(10.dp)).padding(2.dp),
-                    ) {
-                        TaxCode.entries.forEach { code ->
-                            val on = code == line.taxCode
-                            Box(
-                                Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(7.dp)).background(if (on) c.ink else Color.Transparent)
-                                    .plainClickable { vm.setLineTaxCode(line.key, code) },
-                                contentAlignment = Alignment.Center,
-                            ) { MonoText(code.name, size = 11.sp, color = if (on) Color.White else c.muted, maxLines = 1) }
-                        }
-                    }
-                    MonoText(
-                        Fmt.f2(line.total), size = 14.sp, weight = FontWeight.Medium, textAlign = TextAlign.End, maxLines = 1,
-                        modifier = Modifier.widthIn(min = 90.dp),
-                    )
-                }
-            }
+            LineDraftEditor(line, onChange = vm::replaceLine, onRemove = { vm.removeLine(line.key) })
         }
-        Box(
-            Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(12.dp)).dashedBorder(c.line, 12.dp).plainClickable(onClick = vm::addLine),
-            contentAlignment = Alignment.Center,
-        ) { Text("+ Add line", style = EirsType.sans(14.sp, FontWeight.Medium).copy(color = c.brand)) }
+        AddLineButton(onClick = vm::addLine)
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PaymentCard(s: RegisterInvoiceUiState, vm: RegisterInvoiceViewModel) {
     EirsCard(spacing = 12.dp) {
         StepHeading(4, "Payment")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            InvoicePaymentMode.entries.forEach { m ->
-                EirsChip(m.displayName, selected = s.paymentMode == m, onClick = { vm.setPaymentMode(m) }, height = 38.dp, radius = 10.dp, horizontalPadding = 13.dp)
-            }
-        }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            PaymentTerm.entries.forEach { t ->
-                EirsChip(
-                    t.displayName, selected = s.paymentTerm == t, onClick = { vm.setPaymentTerm(t) }, modifier = Modifier.weight(1f),
-                    height = 38.dp, radius = 10.dp,
-                )
-            }
-        }
+        PaymentPicker(s.paymentMode, s.paymentTerm, vm::setPaymentMode, vm::setPaymentTerm)
     }
 }
-

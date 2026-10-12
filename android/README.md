@@ -46,10 +46,18 @@ Splash · onboarding · sign in / sign up / verify (SMS or email) / forgot, rese
 dashboard (range + branch filters, chart scrubbing, tax/transaction-type/branch breakdowns, recent activity) ·
 invoices (list, detail with proof-of-registration QR, thermal receipt view, cancel with reason, register form) ·
 receipts (list, detail, register) · items catalog (list, create/edit) · withholding (list, detail) ·
-More / fiscal readiness · terminal mode (full-screen, hold-to-exit, phone + tablet layouts).
+More / fiscal readiness · terminal mode (full-screen, hold-to-exit, phone + tablet layouts) ·
+settings (Account, MoR credentials, Seller profile, Branches, Source systems with merchant excise, API keys with
+one-time key reveal, Verify setup) · invoice / receipt row actions (⋮ sheet: credit & debit notes, interim & final
+invoices against a retainer, cancel, linked invoice).
+
+Settings pages share one chip multi-select (`ui/designsystem/Selection.kt` → `ChipMultiSelect` / `ChipGroup`) and one
+status pill (`StatusPill`). The Branch → Source system → API key ceilings and the derived EXCISE chip live in
+`domain/usecase/SettingsUseCases.kt` (`SettingsRules`); row-action and credit-note rules in `InvoiceActionUseCases.kt`.
 
 ## Tests
-`./gradlew :data:test` — totals, cancellation, withholding netting, password policy, amount in words, analytics.
+`./gradlew :data:test` — totals, cancellation, withholding netting, password policy, amount in words, analytics,
+row actions, credit/debit and interim/final registration, settings rules (excise, key ceilings, delete guards).
 
 ## Fonts
 Geist, Geist Mono and Instrument Serif are bundled in `app/src/main/res/font` (SIL OFL — see `licenses/`).

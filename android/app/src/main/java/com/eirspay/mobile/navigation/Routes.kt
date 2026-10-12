@@ -34,3 +34,21 @@ import kotlinx.serialization.Serializable
 @Serializable data class WithholdingDetailRoute(val id: String)
 /** [branch] is a [com.eirspay.domain.model.Branch] name. */
 @Serializable data class TerminalRoute(val branch: String)
+
+/** Credit or debit note for an invoice; [kind] is a [com.eirspay.domain.model.DocumentType] name (CRE / DEB). */
+@Serializable data class AdjustmentNoteRoute(val invoiceId: String, val kind: String)
+/** Interim or final invoice against a retainer; [kind] is INT / FIN. */
+@Serializable data class RetainerInvoiceRoute(val retainerId: String, val kind: String)
+
+// Settings (More tab)
+@Serializable data object AccountSettingsRoute
+@Serializable data object MorCredentialsRoute
+@Serializable data object SellerProfileRoute
+@Serializable data object VerifySetupRoute
+@Serializable data object BranchesRoute
+@Serializable data class BranchDetailRoute(val id: String)
+@Serializable data object SourceSystemsRoute
+@Serializable data class SourceSystemDetailRoute(val id: String)
+@Serializable data object ApiKeysRoute
+/** [id] null opens the create form. */
+@Serializable data class ApiKeyDetailRoute(val id: String? = null)

@@ -22,6 +22,8 @@ import com.eirspay.domain.model.ReceiptView
 import com.eirspay.domain.model.sumMoney
 import com.eirspay.domain.repository.PreferencesRepository
 import com.eirspay.domain.usecase.ObserveReceiptViewsUseCase
+import com.eirspay.domain.usecase.ReceiptRowAction
+import com.eirspay.domain.usecase.RowActionPolicy
 import com.eirspay.mobile.ui.designsystem.*
 import com.eirspay.mobile.ui.theme.Eirs
 import com.eirspay.mobile.ui.theme.EirsType
@@ -59,6 +61,13 @@ data class ReceiptsTabUiState(
 
 private data class ReceiptFilters(val query: String = "", val type: ReceiptType? = null, val method: PaymentMethod? = null)
 
+/** The receipt list's ⋮ sheet. The id stays set while the sheet animates out. */
+data class ReceiptActionsUiState(
+    val open: Boolean = false,
+    val view: ReceiptView? = null,
+    val actions: List<ReceiptRowAction> = emptyList(),
+)
+
 @HiltViewModel
 class ReceiptsTabViewModel @Inject constructor(
     observeReceipts: ObserveReceiptViewsUseCase,
@@ -84,6 +93,16 @@ class ReceiptsTabViewModel @Inject constructor(
                 summary = Fmt.plural(rows.size, "receipt") + " · " + Fmt.etb(collected) + " collected",
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ReceiptsTabUiState())
+
+    private val actionTarget = MutableStateFlow<Pair<String?, Boolean>>(null to false)
+
+    val actions: StateFlow<ReceiptActionsUiState> = combine(observeReceipts(), actionTarget) { views, (id, open) ->
+        val view = id?.let { rid -> views.find { it.receipt.id == rid } }
+        ReceiptActionsUiState(open && view != null, view, view?.let { RowActionPolicy.receiptActions(it) }.orEmpty())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ReceiptActionsUiState())
+
+    fun openActions(id: String) { actionTarget.value = id to true }
+    fun closeActions() = actionTarget.update { it.first to false }
 
     fun onQuery(q: String) = filters.update { it.copy(query = q) }
     fun onType(t: ReceiptType?) = filters.update { it.copy(type = t) }
@@ -128,13 +147,13 @@ fun ReceiptsTabContent(onOpenReceipt: (String) -> Unit, onOpenInvoice: (String) 
             Text(state.summary, style = EirsType.sans(13.sp).copy(color = c.muted), modifier = Modifier.weight(1f, fill = false))
             TextLink("+ New receipt", onNewReceipt, size = 13.sp)
         }
-        state.rows.forEach { row -> ReceiptCard(row, { onOpenReceipt(row.id) }, onOpenInvoice) }
+        state.rows.forEach { row -> ReceiptCard(row, { onOpenReceipt(row.id) }, onOpenInvoice, { vm.openActions(row.id) }) }
         if (state.rows.isEmpty()) EmptyState("No receipts match these filters.")
     }
 }
 
 @Composable
-private fun ReceiptCard(row: ReceiptRowUi, onOpen: () -> Unit, onOpenInvoice: (String) -> Unit) {
+private fun ReceiptCard(row: ReceiptRowUi, onOpen: () -> Unit, onOpenInvoice: (String) -> Unit, onActions: () -> Unit) {
     val c = Eirs.colors
     val tone = row.type.tone()
     ListCard(onClick = onOpen) {
@@ -145,7 +164,12 @@ private fun ReceiptCard(row: ReceiptRowUi, onOpen: () -> Unit, onOpenInvoice: (S
                     Badge(row.type.displayName, tone.bg, tone.fg)
                 }
             },
-            right = { MonoText(row.amount, size = 13.sp, weight = FontWeight.Medium, color = if (row.refund) c.red else c.ink, maxLines = 1) },
+            right = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    MonoText(row.amount, size = 13.sp, weight = FontWeight.Medium, color = if (row.refund) c.red else c.ink, maxLines = 1)
+                    KebabButton(onClick = onActions)
+                }
+            },
         )
         SplitRow(
             left = { Text(row.party, Modifier.weight(1f), style = EirsType.sans(13.sp, FontWeight.Medium), maxLines = 1, overflow = ellipsis) },
@@ -161,6 +185,37 @@ private fun ReceiptCard(row: ReceiptRowUi, onOpen: () -> Unit, onOpenInvoice: (S
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(row.whenText, style = EirsType.sans(11.sp).copy(color = c.muted))
             Text(row.branch, style = EirsType.sans(11.sp).copy(color = c.muted))
+        }
+    }
+}
+
+/**
+ * The receipt list's ⋮ sheet: View details, plus View linked invoice when the receipt has one.
+ * Drawn by the signed-in shell; shares [ReceiptsTabViewModel] with the Receipts tab.
+ */
+@Composable
+fun ReceiptRowActionsOverlay(onViewReceipt: (String) -> Unit, onViewInvoice: (String) -> Unit) {
+    val vm: ReceiptsTabViewModel = hiltViewModel()
+    val s by vm.actions.collectAsStateWithLifecycle()
+    EirsBottomSheet(visible = s.open, onDismiss = vm::closeActions) {
+        val v = s.view
+        if (v != null) {
+            val r = v.receipt
+            val linked = v.linkedInvoice
+            ActionSheetContent(
+                eyebrow = "RECEIPT · " + r.type.name,
+                title = r.displayNo,
+                subtitle = v.buyer.name + " · " + Fmt.etb(v.amount),
+                actions = s.actions.map { a ->
+                    when (a) {
+                        ReceiptRowAction.VIEW_DETAILS -> SheetAction("View details", EirsIcons.Eye, { vm.closeActions(); onViewReceipt(r.id) })
+                        ReceiptRowAction.VIEW_LINKED_INVOICE -> SheetAction(
+                            "View linked invoice" + (linked?.let { " · " + it.displayNo } ?: ""), EirsIcons.Link,
+                            { vm.closeActions(); linked?.let { onViewInvoice(it.id) } },
+                        )
+                    }
+                },
+            )
         }
     }
 }

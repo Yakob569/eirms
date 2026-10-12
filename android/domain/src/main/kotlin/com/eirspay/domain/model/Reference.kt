@@ -20,9 +20,17 @@ enum class TransactionType(val displayName: String) {
 enum class DocumentType(val displayName: String) {
     INV("Invoice"),
     CRE("Credit note"),
-    DEB("Debit note");
+    DEB("Debit note"),
+    /** Retainer: an advance invoice later settled by interim and final invoices. */
+    RTN("Retainer"),
+    INT("Interim invoice"),
+    FIN("Final invoice");
 
-    val isAmendment: Boolean get() = this != INV
+    /** Credit and debit notes amend an earlier invoice; their buyer must match it exactly. */
+    val isAmendment: Boolean get() = this == CRE || this == DEB
+
+    /** Interim and final invoices are registered against a retainer. */
+    val isRetainerFollowUp: Boolean get() = this == INT || this == FIN
 }
 
 enum class InvoiceStatus { ISSUED, PAID, WITHHELD, CANCELED }
@@ -55,6 +63,7 @@ enum class InvoicePaymentMode(val displayName: String, val code: String) {
 
 enum class PaymentTerm(val displayName: String, val code: String) {
     IMMEDIATE("Immediate", "IMMEDIATE"),
+    NET_15("Net 15", "NET 15"),
     NET_30("Net 30", "NET 30"),
 }
 

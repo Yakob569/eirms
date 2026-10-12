@@ -33,6 +33,7 @@ internal object SampleData {
     val ethioTelecom = Party("Ethio Telecom", tin = "0000030603", vatNumber = "1087650012", phone = "+251115515000", email = "procurement@ethiotelecom.et", address = "Addis Ababa · Wereda 05")
     val dashen = Party("Dashen Trading PLC", tin = "0041527796", vatNumber = "2231009874", phone = "+251116612233", email = "ap@dashentrading.et", address = "Addis Ababa · Wereda 03")
     val awash = Party("Awash Logistics S.C", tin = "0063321458", vatNumber = "3345120098", phone = "+251114408877", email = "finance@awashlogistics.et", address = "Addis Ababa · Wereda 11")
+    val abyssinia = Party("Abyssinia Consulting PLC", tin = "0072214598", vatNumber = "4410098812", phone = "+251116674400", email = "accounts@abyssiniaconsult.et", address = "Addis Ababa · Wereda 08")
     val zemen = Party("Zemen Bank S.C", tin = "0005581342", vatNumber = "1122334455", email = "ops@zemenbank.com", address = "Addis Ababa · Wereda 01")
 
     private fun invoice(
@@ -72,6 +73,9 @@ internal object SampleData {
             Party("Selam Bekele", idType = BuyerIdType.KID, idNumber = "AA-114-22871"), InvoicePaymentMode.MOBILE_MONEY, PaymentTerm.IMMEDIATE, listOf(
                 line("Yirgacheffe coffee beans, 1kg", "ITM-0508", G, "KG", 4, 650.0, TaxCode.VAT15),
                 line("Printed notebooks", "ITM-0612", G, "PCS", 2, 350.0, TaxCode.VAT0))),
+        // Retainer: settled later by interim / final invoices (row actions on the Invoices tab).
+        invoice("RTN-H7G6F5D4SA", "095", DocumentType.RTN, TransactionType.B2B, InvoiceStatus.ISSUED, "2026-09-20", "09:40", Branch.MAIN, abyssinia,
+            InvoicePaymentMode.BANK_TRANSFER, PaymentTerm.NET_30, listOf(line("Retainer, Q4 POS support", "SRV-0200", S, "JOB", 1, 45000.0, TaxCode.VAT15))),
         invoice("INV-L5K4J3H2GF", "096", DocumentType.INV, TransactionType.B2B, InvoiceStatus.ISSUED, "2026-09-21", "10:05", Branch.MAIN, zemen,
             InvoicePaymentMode.BANK_TRANSFER, PaymentTerm.NET_30, listOf(
                 line("Thermal receipt paper rolls", "ITM-0701", G, "PCS", 40, 85.0, TaxCode.VAT15),
@@ -136,5 +140,5 @@ internal object SampleData {
         item("ITM-0099", "Fax machine toner", G, "8443.99.00", TaxCode.VAT15, "PCS", 2400.0, false, "Electronics"),
     )
 
-    val taxpayers = listOf(ethioTelecom, dashen, awash, zemen)
+    val taxpayers = listOf(ethioTelecom, dashen, awash, zemen, abyssinia)
 }

@@ -13,19 +13,35 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.eirspay.domain.model.Branch
+import com.eirspay.domain.model.DocumentType
 import com.eirspay.mobile.feature.auth.*
+import com.eirspay.mobile.feature.invoices.AdjustmentNoteScreen
 import com.eirspay.mobile.feature.invoices.InvoiceDetailScreen
+import com.eirspay.mobile.feature.invoices.InvoiceRowActionsOverlay
 import com.eirspay.mobile.feature.invoices.InvoicePrintScreen
 import com.eirspay.mobile.feature.invoices.InvoicesTabContent
 import com.eirspay.mobile.feature.invoices.RegisterInvoiceScreen
+import com.eirspay.mobile.feature.invoices.RetainerInvoiceScreen
 import com.eirspay.mobile.feature.items.ItemFormScreen
 import com.eirspay.mobile.feature.items.ItemsScreen
 import com.eirspay.mobile.feature.main.MainNavigator
 import com.eirspay.mobile.feature.main.MainScreen
 import com.eirspay.mobile.feature.onboarding.OnboardingScreen
 import com.eirspay.mobile.feature.receipts.ReceiptDetailScreen
+import com.eirspay.mobile.feature.receipts.ReceiptRowActionsOverlay
 import com.eirspay.mobile.feature.receipts.ReceiptsTabContent
 import com.eirspay.mobile.feature.receipts.RegisterReceiptScreen
+import com.eirspay.mobile.feature.settings.AccountSettingsScreen
+import com.eirspay.mobile.feature.settings.ApiKeyDetailScreen
+import com.eirspay.mobile.feature.settings.ApiKeysScreen
+import com.eirspay.mobile.feature.settings.BranchDetailScreen
+import com.eirspay.mobile.feature.settings.BranchesScreen
+import com.eirspay.mobile.feature.settings.MorCredentialsScreen
+import com.eirspay.mobile.feature.settings.SellerProfileScreen
+import com.eirspay.mobile.feature.settings.SettingsPage
+import com.eirspay.mobile.feature.settings.SourceSystemDetailScreen
+import com.eirspay.mobile.feature.settings.SourceSystemsScreen
+import com.eirspay.mobile.feature.settings.VerifySetupScreen
 import com.eirspay.mobile.feature.splash.SplashScreen
 import com.eirspay.mobile.feature.terminal.TerminalScreen
 import com.eirspay.mobile.feature.withholding.WithholdingDetailScreen
@@ -62,6 +78,17 @@ fun AppNavHost(resetToken: String?, showPrototypeShortcuts: Boolean) {
         override fun openItems() = nav.navigate(ItemsRoute)
         override fun openWithholding() = nav.navigate(WithholdingRoute)
         override fun startTerminal(branch: Branch) = nav.navigate(TerminalRoute(branch.name))
+        override fun openSettings(page: SettingsPage) = nav.navigate(
+            when (page) {
+                SettingsPage.ACCOUNT -> AccountSettingsRoute
+                SettingsPage.MOR -> MorCredentialsRoute
+                SettingsPage.SELLER -> SellerProfileRoute
+                SettingsPage.BRANCHES -> BranchesRoute
+                SettingsPage.SOURCE_SYSTEMS -> SourceSystemsRoute
+                SettingsPage.API_KEYS -> ApiKeysRoute
+                SettingsPage.VERIFY -> VerifySetupRoute
+            },
+        )
         override fun signedOut() = nav.navigateClearing(SignInRoute)
     }
     val back: () -> Unit = { nav.popBackStack() }
@@ -140,6 +167,14 @@ fun AppNavHost(resetToken: String?, showPrototypeShortcuts: Boolean) {
                         onNewReceipt = mainNavigator::registerReceipt,
                     )
                 },
+                overlays = {
+                    InvoiceRowActionsOverlay(
+                        onViewDetails = mainNavigator::openInvoice,
+                        onMakeAdjustment = { id, kind -> nav.navigate(AdjustmentNoteRoute(id, kind.name)) },
+                        onMakeRetainerInvoice = { id, kind -> nav.navigate(RetainerInvoiceRoute(id, kind.name)) },
+                    )
+                    ReceiptRowActionsOverlay(onViewReceipt = mainNavigator::openReceipt, onViewInvoice = mainNavigator::openInvoice)
+                },
             )
         }
         composable<InvoiceDetailRoute> { entry ->
@@ -152,6 +187,20 @@ fun AppNavHost(resetToken: String?, showPrototypeShortcuts: Boolean) {
             RegisterInvoiceScreen(onBack = back, onRegistered = { id ->
                 nav.navigate(InvoiceDetailRoute(id)) { popUpTo<RegisterInvoiceRoute> { inclusive = true } }
             })
+        }
+        composable<AdjustmentNoteRoute> { entry ->
+            val r = entry.toRoute<AdjustmentNoteRoute>()
+            AdjustmentNoteScreen(
+                invoiceId = r.invoiceId, kind = DocumentType.valueOf(r.kind), onClose = back,
+                onRegistered = { id -> nav.navigate(InvoiceDetailRoute(id)) { popUpTo<AdjustmentNoteRoute> { inclusive = true } } },
+            )
+        }
+        composable<RetainerInvoiceRoute> { entry ->
+            val r = entry.toRoute<RetainerInvoiceRoute>()
+            RetainerInvoiceScreen(
+                retainerId = r.retainerId, kind = DocumentType.valueOf(r.kind), onClose = back,
+                onRegistered = { id -> nav.navigate(InvoiceDetailRoute(id)) { popUpTo<RetainerInvoiceRoute> { inclusive = true } } },
+            )
         }
         composable<ReceiptDetailRoute> { entry ->
             ReceiptDetailScreen(
@@ -184,6 +233,39 @@ fun AppNavHost(resetToken: String?, showPrototypeShortcuts: Boolean) {
                 onOpenInvoice = { nav.navigate(InvoiceDetailRoute(it)) },
                 onOpenReceipt = { nav.navigate(ReceiptDetailRoute(it)) },
             )
+        }
+
+        // --- Settings -------------------------------------------------------------------------
+        composable<AccountSettingsRoute> { AccountSettingsScreen(onBack = back) }
+        composable<MorCredentialsRoute> {
+            MorCredentialsScreen(onBack = back, onVerifySetup = { nav.navigate(VerifySetupRoute) })
+        }
+        composable<SellerProfileRoute> { SellerProfileScreen(onBack = back) }
+        composable<VerifySetupRoute> { VerifySetupScreen(onBack = back) }
+        composable<BranchesRoute> {
+            BranchesScreen(onBack = back, onOpenBranch = { nav.navigate(BranchDetailRoute(it)) })
+        }
+        composable<BranchDetailRoute> { entry ->
+            BranchDetailScreen(
+                id = entry.toRoute<BranchDetailRoute>().id, onBack = back,
+                onOpenSourceSystem = { nav.navigate(SourceSystemDetailRoute(it)) },
+                onOpenApiKey = { nav.navigate(ApiKeyDetailRoute(it)) },
+            )
+        }
+        composable<SourceSystemsRoute> {
+            SourceSystemsScreen(onBack = back, onOpenSourceSystem = { nav.navigate(SourceSystemDetailRoute(it)) })
+        }
+        composable<SourceSystemDetailRoute> { entry ->
+            SourceSystemDetailScreen(
+                id = entry.toRoute<SourceSystemDetailRoute>().id, onBack = back,
+                onOpenBranch = { nav.navigate(BranchDetailRoute(it)) },
+            )
+        }
+        composable<ApiKeysRoute> {
+            ApiKeysScreen(onBack = back, onOpenKey = { nav.navigate(ApiKeyDetailRoute(it)) }, onCreateKey = { nav.navigate(ApiKeyDetailRoute(null)) })
+        }
+        composable<ApiKeyDetailRoute> { entry ->
+            ApiKeyDetailScreen(id = entry.toRoute<ApiKeyDetailRoute>().id, onBack = back)
         }
         composable<TerminalRoute> { entry ->
             KeepScreenOn()

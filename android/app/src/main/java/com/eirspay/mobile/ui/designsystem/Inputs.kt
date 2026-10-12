@@ -53,6 +53,7 @@ fun EirsTextField(
     leading: @Composable (() -> Unit)? = null,
     trailing: @Composable (() -> Unit)? = null,
     horizontalPadding: Dp = 14.dp,
+    readOnly: Boolean = false,
 ) {
     val c = Eirs.colors
     val source = remember { MutableInteractionSource() }
@@ -65,6 +66,7 @@ fun EirsTextField(
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
+        readOnly = readOnly,
         textStyle = style,
         cursorBrush = SolidColor(c.brand),
         interactionSource = source,
@@ -163,11 +165,49 @@ fun FormField(
     keyboardType: KeyboardType = KeyboardType.Text,
     restingBackground: Color = Eirs.colors.background,
     fontSize: TextUnit = 16.sp,
+    readOnly: Boolean = false,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    height: Dp = 46.dp,
 ) = EirsTextField(
-    value = value, onValueChange = onValueChange, modifier = modifier, placeholder = placeholder, height = 46.dp,
+    value = value, onValueChange = onValueChange, modifier = modifier, placeholder = placeholder, height = height,
     mono = mono, textAlign = textAlign, keyboardType = keyboardType, focusRing = false,
     restingBackground = restingBackground, horizontalPadding = 12.dp, fontSize = fontSize,
+    readOnly = readOnly, visualTransformation = visualTransformation,
 )
+
+/** Multi-line white text area (radius 14) for free text such as a credit note's reason. */
+@Composable
+fun TextAreaField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String = "",
+    minLines: Int = 3,
+) {
+    val c = Eirs.colors
+    val source = remember { MutableInteractionSource() }
+    val focused by source.collectIsFocusedAsState()
+    val shape = RoundedCornerShape(14.dp)
+    val style = EirsType.sans(16.sp, lineHeight = 1.4).copy(color = c.ink)
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        minLines = minLines,
+        textStyle = style,
+        cursorBrush = SolidColor(c.brand),
+        interactionSource = source,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
+        decorationBox = { inner ->
+            Box(
+                Modifier.fillMaxWidth().clip(shape).background(Color.White).border(1.dp, if (focused) c.brand else c.line, shape).padding(12.dp),
+            ) {
+                if (value.isEmpty() && placeholder.isNotEmpty()) Text(placeholder, style = style.copy(color = c.placeholder))
+                inner()
+            }
+        },
+    )
+}
 
 /** Keeps only digits and one decimal point, for money inputs. */
 fun String.decimalOnly(): String {

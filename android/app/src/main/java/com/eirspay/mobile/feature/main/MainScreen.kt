@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.eirspay.domain.model.Branch
 import com.eirspay.mobile.feature.home.HomeTab
 import com.eirspay.mobile.feature.more.MoreTab
+import com.eirspay.mobile.feature.settings.SettingsPage
 import com.eirspay.mobile.ui.designsystem.*
 import com.eirspay.mobile.ui.theme.Eirs
 import com.eirspay.mobile.ui.theme.EirsType
@@ -36,6 +37,7 @@ interface MainNavigator {
     fun openItems()
     fun openWithholding()
     fun startTerminal(branch: Branch)
+    fun openSettings(page: SettingsPage)
     fun signedOut()
 }
 
@@ -53,6 +55,8 @@ fun MainScreen(
     navigator: MainNavigator,
     invoicesTab: @Composable (showCanceledRequest: Int) -> Unit,
     receiptsTab: @Composable () -> Unit,
+    /** Sheets owned by tab content (row actions) that must draw above the whole shell. */
+    overlays: @Composable () -> Unit = {},
 ) {
     val vm: MainViewModel = hiltViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
@@ -108,6 +112,7 @@ fun MainScreen(
                                         onOpenItems = navigator::openItems,
                                         onOpenWithholding = navigator::openWithholding,
                                         onOpenCanceledInvoices = { canceledRequest++; selectTab(MainTab.INVOICES) },
+                                        onOpenSettings = navigator::openSettings,
                                     )
                                 }
                             }
@@ -133,7 +138,7 @@ fun MainScreen(
             UserSheet(
                 visible = sheet == MainSheet.USER,
                 session = state.session,
-                onAccountSettings = { selectTab(MainTab.MORE) },
+                onAccountSettings = { sheet = null; navigator.openSettings(SettingsPage.ACCOUNT) },
                 onSignOut = { sheet = null; vm.signOut() },
                 onDismiss = { sheet = null },
             )
@@ -151,6 +156,7 @@ fun MainScreen(
                 onReceipt = { sheet = null; navigator.registerReceipt() },
                 onDismiss = { sheet = null },
             )
+            overlays()
         }
     }
 }

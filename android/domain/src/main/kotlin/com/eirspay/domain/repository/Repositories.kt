@@ -54,6 +54,42 @@ interface AnalyticsRepository {
     suspend fun salesAnalytics(range: DashboardRange, branch: Branch?): SalesAnalytics
 }
 
+/**
+ * Merchant settings: credentials, seller profile, branches, source systems, API keys and account
+ * security. Changes are applied immediately and pushed through [settings].
+ */
+interface SettingsRepository {
+    val settings: StateFlow<MerchantSettings>
+    suspend fun saveCredentials(credentials: MorCredentials)
+    suspend fun saveSeller(profile: SellerProfile)
+
+    /** Adds a branch with default rules and returns it, ready to edit. */
+    suspend fun addBranch(): MerchantBranch
+    suspend fun saveBranch(branch: MerchantBranch)
+    suspend fun deleteBranch(id: String)
+
+    /** Adds an unverified source system under [branchId] and returns it, ready to edit. */
+    suspend fun addSourceSystem(branchId: String): SourceSystemProfile
+    suspend fun saveSourceSystem(system: SourceSystemProfile)
+    suspend fun deleteSourceSystem(id: String)
+    /** Sends a probe document for the source system using [hsn] as the test item's HSN code. */
+    suspend fun verifySourceSystem(id: String, hsn: String): SourceSystemProfile
+    suspend fun setExciseEnabled(enabled: Boolean)
+
+    /** Issues a key. The full secret is only ever returned here. */
+    suspend fun createApiKey(draft: ApiKeyDraft): CreatedApiKey
+    suspend fun saveApiKey(key: ApiKey)
+    /** Deactivates the key; it stays on record. */
+    suspend fun revokeApiKey(id: String)
+
+    suspend fun changePassword(current: String, newPassword: String)
+    suspend fun signOutDevice(id: String)
+    suspend fun signOutOtherDevices()
+
+    /** Sends the signed probe invoice to MoR; true when it passes. */
+    suspend fun verifySetup(): Boolean
+}
+
 interface TaxpayerRepository {
     /** Looks a TIN up in the MoR taxpayer registry. */
     suspend fun lookup(tin: String): Party?
