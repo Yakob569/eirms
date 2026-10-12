@@ -76,9 +76,24 @@ struct InvoiceDetailScreen: View {
     // MARK: Cancel sheet
 
     private var cancelSheet: some View {
+        InvoiceCancelSheet(number: model.invoice?.number ?? "", reason: $model.cancelReason) {
+            Task { await model.confirmCancel() }
+        }
+    }
+}
+
+/// "Cancel invoice 104": reason picker and the red confirm button. Shared by the detail screen and the
+/// list cards' ⋮ menu.
+struct InvoiceCancelSheet: View {
+    @Environment(\.eirs) private var eirs
+    var number: String
+    @Binding var reason: CancelReason
+    var onConfirm: () -> Void
+
+    var body: some View {
         let title = Text("Cancel invoice ").font(EirsFont.serif(26)).foregroundColor(eirs.ink)
-            + Text(model.invoice?.number ?? "").font(EirsFont.serif(26, italic: true)).foregroundColor(eirs.red)
-        return VStack(alignment: .leading, spacing: 8) {
+            + Text(number).font(EirsFont.serif(26, italic: true)).foregroundColor(eirs.red)
+        VStack(alignment: .leading, spacing: 8) {
             title
                 .padding(.horizontal, 6)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -88,24 +103,22 @@ struct InvoiceDetailScreen: View {
                 .lineSpacing(3)
                 .padding(.horizontal, 6)
                 .padding(.bottom, 8)
-            ForEach(CancelReason.allCases) { reason in
-                reasonRow(reason)
+            ForEach(CancelReason.allCases) { option in
+                reasonRow(option)
             }
             PrimaryButton("Cancel with MoR", height: 50, fontSize: 15, showArrow: false,
-                          container: eirs.red, pressedColor: eirs.redInk) {
-                Task { await model.confirmCancel() }
-            }
+                          container: eirs.red, pressedColor: eirs.redInk, action: onConfirm)
             .padding(.top, 8)
         }
     }
 
-    private func reasonRow(_ reason: CancelReason) -> some View {
-        let on = reason == model.cancelReason
+    private func reasonRow(_ option: CancelReason) -> some View {
+        let on = option == reason
         let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
-        return Button { model.cancelReason = reason } label: {
+        return Button { reason = option } label: {
             HStack(spacing: 12) {
-                MonoText(text: reason.code, size: 11, color: eirs.muted)
-                Text(reason.label)
+                MonoText(text: option.code, size: 11, color: eirs.muted)
+                Text(option.label)
                     .font(EirsFont.sans(15))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if on { LineIcon(EirsIcons.check, size: 16, strokeWidth: 2.6, tint: eirs.red) }
@@ -376,10 +389,10 @@ private struct InvoiceDetailBody: View {
     @ViewBuilder private var amendsCard: some View {
         if let amendment = inv.amendment {
             let previous: String = amended.map { "ETH-" + String($0.irn.prefix(10)) + "…" } ?? amendment.previousInvoiceId
-            KeyValueCard(title: "AMENDS", rows: [
+            KeyValueCard(title: inv.documentType.isRetainerFollowUp ? "AGAINST RETAINER" : "AMENDS", rows: [
                 ("Reason", amendment.reason),
                 ("Previous IRN", previous),
-                ("Related doc", amended?.number ?? "—")
+                ("Related doc", amended?.displayNumber ?? "—")
             ])
         }
     }

@@ -30,7 +30,7 @@ EIRSPayKit (Swift package, Foundation only — builds & tests without Xcode, eve
 EIRSPay (app target)
 ├─ App/            AppContainer (composition root), Router, RootView (navigation graph), @main
 ├─ DesignSystem/   theme tokens, fonts, icons, components, inputs, motion, loader, sheets
-└─ Features/       Splash · Onboarding · Auth · Main · Home · More · Invoices · Receipts · Items · Withholding · Terminal
+└─ Features/       Splash · Onboarding · Auth · Main · Home · More · Settings · Invoices · Receipts · Items · Withholding · Terminal
 ```
 
 - Dependency rule: `App/Features → EIRSDomain ← EIRSData`. Features depend on use cases / repository protocols only.
@@ -38,6 +38,13 @@ EIRSPay (app target)
   `App/RootView.swift` is the single map from callbacks to destinations.
 - Money is `Decimal`; tax totals come from `EIRSDomain/Models/TaxCalculator.swift`.
 - Terminal mode is a full-screen cover (no swipe-back); only press-and-hold Exit leaves it. Phone and iPad layouts.
+- Settings (More tab): Account, MoR credentials, Seller profile, Branches → Source systems → API keys, Verify setup.
+  Capability rules (branch → source system → key ceilings, derived EXCISE, delete blockers) live in
+  `EIRSDomain/Models/Settings.swift` (`SettingsRules`) and are re-checked by the use cases; the UI shares one
+  `ChipMultiSelect` and one `StatusPill` (`Features/Settings/SettingsComponents.swift`).
+- List cards have a ⋮ menu (`RowActions` in the domain decides the options): credit/debit notes (locked copy of the
+  original, ticked lines only) and interim/final invoices against a retainer (full form; shares `InvLineEditor`
+  with Register invoice).
 
 ### Hooking up the backend later
 1. Add API-backed implementations in `EIRSData` (URLSession + Codable) that conform to the protocols in
@@ -50,7 +57,7 @@ Notes for the backend: `AnalyticsRepository` generates the dashboard series toda
 
 ## Tests
 `swift test --package-path EIRSPayKit` — totals, cancellation, withholding netting, password policy, amount in
-words, masking, analytics. CI (`.github/workflows/ios.yml`) runs them and builds the app on every change under `ios/`.
+words, masking, analytics, row actions, credit/debit and interim/final rules, settings ceilings and delete rules. CI (`.github/workflows/ios.yml`) runs them and builds the app on every change under `ios/`.
 
 ## Fonts
 Geist, Geist Mono and Instrument Serif are bundled in `EIRSPay/Resources/Fonts` (SIL OFL — see `licenses/`).

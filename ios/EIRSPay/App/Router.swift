@@ -30,6 +30,22 @@ enum Route: Hashable {
     case itemForm(code: String?)
     case withholding
     case withholdingDetail(id: String)
+
+    /// Credit / debit note for an invoice (kind = .cre or .deb).
+    case adjustmentNote(invoiceId: String, kind: DocumentType)
+    /// Interim / final invoice against a retainer (kind = .int or .fin).
+    case retainerInvoice(retainerId: String, kind: DocumentType)
+
+    case settings(SettingsPage)
+    case branchDetail(id: String)
+    case sourceSystemDetail(id: String)
+    /// nil = the "New key" form.
+    case apiKeyDetail(id: String?)
+}
+
+/// Full-screen pages opened from the More tab's settings list (and the setup stepper).
+enum SettingsPage: String, Hashable {
+    case account, morCredentials, sellerProfile, branches, sourceSystems, apiKeys, verifySetup
 }
 
 @Observable

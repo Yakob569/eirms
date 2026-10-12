@@ -28,17 +28,24 @@ public enum TransactionType: String, CaseIterable, Codable, Hashable, Sendable, 
     public var isConsumer: Bool { self == .b2c || self == .g2c }
 }
 
+/// INV/CRE/DEB are the standard family; RTN (retainer) is followed up by INT (interim) and FIN (final) invoices.
 public enum DocumentType: String, CaseIterable, Codable, Hashable, Sendable, Identifiable {
-    case inv = "INV", cre = "CRE", deb = "DEB"
+    case inv = "INV", cre = "CRE", deb = "DEB", rtn = "RTN", int = "INT", fin = "FIN"
     public var id: String { rawValue }
     public var displayName: String {
         switch self {
         case .inv: return "Invoice"
         case .cre: return "Credit note"
         case .deb: return "Debit note"
+        case .rtn: return "Retainer invoice"
+        case .int: return "Interim invoice"
+        case .fin: return "Final invoice"
         }
     }
-    public var isAmendment: Bool { self != .inv }
+    /// Credit and debit notes amend an earlier invoice and must keep its buyer.
+    public var isAmendment: Bool { self == .cre || self == .deb }
+    /// Interim and final invoices are issued against a retainer.
+    public var isRetainerFollowUp: Bool { self == .int || self == .fin }
 }
 
 public enum InvoiceStatus: String, CaseIterable, Codable, Hashable, Sendable {

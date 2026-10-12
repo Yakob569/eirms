@@ -46,12 +46,17 @@ struct RootView: View {
             MainScreen(
                 container: container,
                 navigator: mainNavigator,
-                invoicesTab: { request in InvoicesTabContent(container: container, showCanceledRequest: request, onOpenInvoice: { router.push(.invoiceDetail(id: $0)) }) },
-                receiptsTab: {
+                invoicesTab: { request, onRowActions in
+                    InvoicesTabContent(container: container, showCanceledRequest: request,
+                                       onOpenInvoice: { router.push(.invoiceDetail(id: $0)) },
+                                       onRowActions: onRowActions)
+                },
+                receiptsTab: { onRowActions in
                     ReceiptsTabContent(container: container,
                                        onOpenReceipt: { router.push(.receiptDetail(id: $0)) },
                                        onOpenInvoice: { router.push(.invoiceDetail(id: $0)) },
-                                       onNewReceipt: { router.push(.registerReceipt) })
+                                       onNewReceipt: { router.push(.registerReceipt) },
+                                       onRowActions: onRowActions)
                 })
         }
     }
@@ -76,7 +81,10 @@ struct RootView: View {
             openItems: { router.push(.items) },
             openWithholding: { router.push(.withholding) },
             startTerminal: { router.terminalBranch = $0 },
-            signedOut: { router.reset(to: .signIn) })
+            signedOut: { router.reset(to: .signIn) },
+            openSettings: { router.push(.settings($0)) },
+            makeAdjustment: { id, kind in router.push(.adjustmentNote(invoiceId: id, kind: kind)) },
+            makeRetainerInvoice: { id, kind in router.push(.retainerInvoice(retainerId: id, kind: kind)) })
     }
 
     // MARK: Pushed destinations
@@ -135,6 +143,44 @@ struct RootView: View {
             WithholdingDetailScreen(container: container, id: id, onBack: back,
                                     onOpenInvoice: { router.push(.invoiceDetail(id: $0)) },
                                     onOpenReceipt: { router.push(.receiptDetail(id: $0)) })
+
+        case let .adjustmentNote(invoiceId, kind):
+            AdjustmentNoteScreen(container: container, invoiceId: invoiceId, kind: kind, onClose: back,
+                                 onRegistered: { router.replaceTop(with: .invoiceDetail(id: $0)) })
+        case let .retainerInvoice(retainerId, kind):
+            RetainerInvoiceScreen(container: container, retainerId: retainerId, kind: kind, onClose: back,
+                                  onRegistered: { router.replaceTop(with: .invoiceDetail(id: $0)) })
+
+        case let .settings(page):
+            settingsPage(page, back: back)
+        case let .branchDetail(id):
+            BranchDetailScreen(container: container, id: id, onBack: back,
+                               onOpenSourceSystem: { router.push(.sourceSystemDetail(id: $0)) },
+                               onOpenApiKey: { router.push(.apiKeyDetail(id: $0)) })
+        case let .sourceSystemDetail(id):
+            SourceSystemDetailScreen(container: container, id: id, onBack: back,
+                                     onOpenBranch: { router.push(.branchDetail(id: $0)) })
+        case let .apiKeyDetail(id):
+            ApiKeyDetailScreen(container: container, id: id, onBack: back)
+        }
+    }
+
+    @ViewBuilder private func settingsPage(_ page: SettingsPage, back: @escaping () -> Void) -> some View {
+        switch page {
+        case .account:
+            AccountScreen(container: container, onBack: back)
+        case .morCredentials:
+            MorCredentialsScreen(container: container, onBack: back, onVerify: { router.push(.settings(.verifySetup)) })
+        case .sellerProfile:
+            SellerProfileScreen(container: container, onBack: back)
+        case .branches:
+            BranchesScreen(container: container, onBack: back, onOpenBranch: { router.push(.branchDetail(id: $0)) })
+        case .sourceSystems:
+            SourceSystemsScreen(container: container, onBack: back, onOpenSourceSystem: { router.push(.sourceSystemDetail(id: $0)) })
+        case .apiKeys:
+            ApiKeysScreen(container: container, onBack: back, onOpenKey: { router.push(.apiKeyDetail(id: $0)) })
+        case .verifySetup:
+            VerifySetupScreen(container: container, onBack: back)
         }
     }
 

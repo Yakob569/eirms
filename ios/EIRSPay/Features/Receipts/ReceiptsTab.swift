@@ -87,13 +87,17 @@ struct ReceiptsTabContent: View {
     var onOpenReceipt: (String) -> Void
     var onOpenInvoice: (String) -> Void
     var onNewReceipt: () -> Void
+    /// Opens the ⋮ bottom sheet (owned by the shell) for a receipt.
+    var onRowActions: (String) -> Void
 
     init(container: AppContainer, onOpenReceipt: @escaping (String) -> Void,
-         onOpenInvoice: @escaping (String) -> Void, onNewReceipt: @escaping () -> Void) {
+         onOpenInvoice: @escaping (String) -> Void, onNewReceipt: @escaping () -> Void,
+         onRowActions: @escaping (String) -> Void) {
         _model = State(initialValue: ReceiptsTabModel(container: container))
         self.onOpenReceipt = onOpenReceipt
         self.onOpenInvoice = onOpenInvoice
         self.onNewReceipt = onNewReceipt
+        self.onRowActions = onRowActions
     }
 
     private var typeOptions: [ReceiptType?] {
@@ -120,7 +124,8 @@ struct ReceiptsTabContent: View {
                 TextLink("+ New receipt", size: 13, action: onNewReceipt)
             }
             ForEach(rows) { row in
-                ReceiptsTabCard(row: row, onOpen: { onOpenReceipt(row.id) }, onOpenInvoice: onOpenInvoice)
+                ReceiptsTabCard(row: row, onOpen: { onOpenReceipt(row.id) }, onOpenInvoice: onOpenInvoice,
+                                onMenu: { onRowActions(row.id) })
             }
             if rows.isEmpty { EmptyState(text: "No receipts match these filters.") }
         }
@@ -157,6 +162,7 @@ private struct ReceiptsTabCard: View {
     var row: ReceiptRowUi
     var onOpen: () -> Void
     var onOpenInvoice: (String) -> Void
+    var onMenu: () -> Void
 
     var body: some View {
         let tone = ReceiptStyle.tone(for: row.type, eirs)
@@ -167,7 +173,10 @@ private struct ReceiptsTabCard: View {
                     Badge(text: row.type.displayName, background: tone.bg, content: tone.fg)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                MonoText(text: row.amount, size: 13, color: row.refund ? eirs.red : eirs.ink, weight: .medium, lineLimit: 1)
+                HStack(spacing: 2) {
+                    MonoText(text: row.amount, size: 13, color: row.refund ? eirs.red : eirs.ink, weight: .medium, lineLimit: 1)
+                    RowMenuButton(onTap: onMenu)
+                }
             }
             HStack(spacing: 8) {
                 Text(row.party).font(EirsFont.sans(13, .medium)).lineLimit(1).truncationMode(.tail)

@@ -20,7 +20,7 @@ public struct ObserveRecentActivityUseCase: Sendable {
     public func callAsFunction(limit: Int = 10) -> AsyncStream<[ActivityItem]> {
         combineLatest2(invoices.observeInvoices(), receipts()) { inv, rcp in
             let fromInvoices = inv.map { i in
-                ActivityItem(kind: i.isCanceled ? .canceled : .invoice, documentId: i.id, number: "INV-\(i.number)",
+                ActivityItem(kind: i.isCanceled ? .canceled : .invoice, documentId: i.id, number: i.displayNumber,
                              party: i.buyer.name, branch: i.branch, transactionType: i.transactionType,
                              at: i.issuedAt, amount: i.totals.grandTotal)
             }

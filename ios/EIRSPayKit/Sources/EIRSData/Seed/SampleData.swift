@@ -25,6 +25,8 @@ enum SampleData {
     private static let jhoneNoPhone = Party(name: "Jhone Doe", idType: .nid, idNumber: "FAN 4521 8890 1123")
     static let ethioTelecom = Party(name: "Ethio Telecom", tin: "0000030603", vatNumber: "1087650012", phone: "+251115515000",
                                     email: "procurement@ethiotelecom.et", address: "Addis Ababa · Wereda 05")
+    static let abyssinia = Party(name: "Abyssinia Consulting PLC", tin: "0072214598", vatNumber: "4410098812", phone: "+251116674400",
+                                 email: "accounts@abyssiniaconsult.et", address: "Addis Ababa · Wereda 08")
     static let dashen = Party(name: "Dashen Trading PLC", tin: "0041527796", vatNumber: "2231009874", phone: "+251116612233",
                               email: "ap@dashentrading.et", address: "Addis Ababa · Wereda 03")
     static let awash = Party(name: "Awash Logistics S.C", tin: "0063321458", vatNumber: "3345120098", phone: "+251114408877",
@@ -75,6 +77,9 @@ enum SampleData {
             invoice("INV-L5K4J3H2GF", "096", .inv, .b2b, .issued, "2026-09-21", "10:05", .main, zemen, .bankTransfer, .net30,
                     [line("Thermal receipt paper rolls", "ITM-0701", g, "PCS", 40, "85", .vat15),
                      line("Imported soft drinks, case", "ITM-0815", g, "CASE", 12, "150", .exc10)]),
+            // Retainer: followed up by interim (INT) and final (FIN) invoices from the ⋮ menu.
+            invoice("RTN-H7G6F5D4SA", "095", .rtn, .b2b, .issued, "2026-09-20", "09:40", .main, abyssinia, .bankTransfer, .net30,
+                    [line("Retainer, Q4 POS support", "SRV-0200", s, "JOB", 1, "45000", .vat15)]),
         ]
     }
 

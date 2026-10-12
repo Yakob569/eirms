@@ -27,6 +27,9 @@ struct RegisterInvoiceScreen: View {
         case .inv: return "invoice."
         case .cre: return "credit note."
         case .deb: return "debit note."
+        case .rtn: return "retainer."
+        case .int: return "interim invoice."
+        case .fin: return "final invoice."
         }
     }
 
@@ -235,19 +238,16 @@ struct RegisterInvoiceScreen: View {
             StepHeading(number: 3, title: "Line items")
             if !model.quickAdd.isEmpty { quickAddRail }
             ForEach(model.lines) { line in
-                lineCard(line)
+                InvLineEditor(line: lineBinding(line.id), onRemove: { model.removeLine(line.id) })
             }
-            Button { model.addLine() } label: {
-                Text("+ Add line")
-                    .font(EirsFont.sans(14, .medium))
-                    .foregroundStyle(eirs.brand)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .dashedBorder(eirs.line, radius: 12)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(PlainTapStyle())
+            InvAddLineButton { model.addLine() }
         }
+    }
+
+    private func lineBinding(_ id: Int) -> Binding<InvLineDraft> {
+        Binding<InvLineDraft>(
+            get: { model.lines.first { $0.id == id } ?? InvLineDraft(id: id) },
+            set: { model.replaceLine($0) })
     }
 
     private var quickAddRail: some View {
@@ -267,61 +267,6 @@ struct RegisterInvoiceScreen: View {
                 .buttonStyle(PlainTapStyle())
             }
         }
-    }
-
-    private func lineCard(_ line: InvLineDraft) -> some View {
-        let id = line.id
-        return VStack(spacing: 8) {
-            HStack(spacing: 8) {
-                FormField(text: Binding<String>(get: { line.description }, set: { model.setLineDescription(id, $0) }),
-                          placeholder: "Item or service")
-                Button { model.removeLine(id) } label: {
-                    LineIcon(EirsIcons.close, size: 15, tint: eirs.muted)
-                        .frame(width: 36, height: 36)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(PlainTapStyle())
-            }
-            HStack(spacing: 8) {
-                FormField(text: Binding<String>(get: { line.quantity }, set: { model.setLineQuantity(id, $0) }),
-                          mono: true, alignment: .trailing, keyboard: .decimalPad, fontSize: 15)
-                    .frame(width: 72)
-                FormField(text: Binding<String>(get: { line.price }, set: { model.setLinePrice(id, $0) }),
-                          placeholder: "Unit price", mono: true, alignment: .trailing, keyboard: .decimalPad, fontSize: 15)
-            }
-            HStack(spacing: 10) {
-                taxPicker(line)
-                MonoText(text: Fmt.f2(line.total), size: 14, weight: .medium, alignment: .trailing, lineLimit: 1)
-                    .frame(minWidth: 90, alignment: .trailing)
-            }
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity)
-        .solidBorder(eirs.line, radius: 14)
-    }
-
-    private func taxPicker(_ line: InvLineDraft) -> some View {
-        let id = line.id
-        return HStack(spacing: 0) {
-            ForEach(TaxCode.allCases) { code in
-                let on = code == line.taxCode
-                Button { model.setLineTaxCode(id, code) } label: {
-                    Text(code.rawValue)
-                        .font(EirsFont.mono(11))
-                        .foregroundStyle(on ? Color.white : eirs.muted)
-                        .lineLimit(1)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(on ? eirs.ink : Color.clear, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(PlainTapStyle())
-            }
-        }
-        .padding(2)
-        .frame(maxWidth: .infinity)
-        .frame(height: 36)
-        .background(eirs.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .solidBorder(eirs.line, radius: 10)
     }
 
     // MARK: Step 4 - Payment

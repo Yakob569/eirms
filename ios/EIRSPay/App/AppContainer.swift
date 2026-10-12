@@ -17,6 +17,7 @@ final class AppContainer {
     let analytics: AnalyticsRepository
     let taxpayers: TaxpayerRepository
     let preferences: PreferencesRepository
+    let settings: SettingsRepository
 
     // Use cases
     let signIn: SignInUseCase
@@ -43,13 +44,25 @@ final class AppContainer {
     let lookupTaxpayer: LookupTaxpayerUseCase
     let getSalesAnalytics: GetSalesAnalyticsUseCase
     let observeRecentActivity: ObserveRecentActivityUseCase
+    let registerAdjustmentNote: RegisterAdjustmentNoteUseCase
+    let registerRetainerInvoice: RegisterRetainerInvoiceUseCase
+
+    // Settings
+    let observeSettings: ObserveSettingsUseCase
+    let saveMerchantProfile: SaveMerchantProfileUseCase
+    let setMerchantExcise: SetMerchantExciseUseCase
+    let manageBranches: ManageBranchesUseCase
+    let manageSourceSystems: ManageSourceSystemsUseCase
+    let manageApiKeys: ManageApiKeysUseCase
+    let manageSessions: ManageSessionsUseCase
+    let runSetupVerification: RunSetupVerificationUseCase
 
     init(auth: AuthRepository, merchant: MerchantRepository, invoices: InvoiceRepository, receipts: ReceiptRepository,
          catalog: CatalogRepository, withholding: WithholdingRepository, analytics: AnalyticsRepository,
-         taxpayers: TaxpayerRepository, preferences: PreferencesRepository) {
+         taxpayers: TaxpayerRepository, preferences: PreferencesRepository, settings: SettingsRepository) {
         self.auth = auth; self.merchant = merchant; self.invoices = invoices; self.receipts = receipts
         self.catalog = catalog; self.withholding = withholding; self.analytics = analytics
-        self.taxpayers = taxpayers; self.preferences = preferences
+        self.taxpayers = taxpayers; self.preferences = preferences; self.settings = settings
 
         signIn = SignInUseCase(auth: auth)
         signUp = SignUpUseCase(auth: auth)
@@ -76,13 +89,25 @@ final class AppContainer {
         lookupTaxpayer = LookupTaxpayerUseCase(taxpayers: taxpayers)
         getSalesAnalytics = GetSalesAnalyticsUseCase(analytics: analytics)
         observeRecentActivity = ObserveRecentActivityUseCase(invoices: invoices, receipts: receiptViews)
+        registerAdjustmentNote = RegisterAdjustmentNoteUseCase(invoices: invoices)
+        registerRetainerInvoice = RegisterRetainerInvoiceUseCase(invoices: invoices)
+
+        observeSettings = ObserveSettingsUseCase(settings: settings)
+        saveMerchantProfile = SaveMerchantProfileUseCase(settings: settings)
+        setMerchantExcise = SetMerchantExciseUseCase(settings: settings)
+        manageBranches = ManageBranchesUseCase(settings: settings)
+        manageSourceSystems = ManageSourceSystemsUseCase(settings: settings)
+        manageApiKeys = ManageApiKeysUseCase(settings: settings)
+        manageSessions = ManageSessionsUseCase(settings: settings)
+        runSetupVerification = RunSetupVerificationUseCase(settings: settings, merchant: merchant)
     }
 
     /// Offline build backed by the in-memory sample data.
     static func live() -> AppContainer {
         AppContainer(auth: FakeAuthRepository(), merchant: FakeMerchantRepository(), invoices: FakeInvoiceRepository(),
                      receipts: FakeReceiptRepository(), catalog: FakeCatalogRepository(), withholding: FakeWithholdingRepository(),
-                     analytics: FakeAnalyticsRepository(), taxpayers: FakeTaxpayerRepository(), preferences: InMemoryPreferencesRepository())
+                     analytics: FakeAnalyticsRepository(), taxpayers: FakeTaxpayerRepository(), preferences: InMemoryPreferencesRepository(),
+                     settings: FakeSettingsRepository())
     }
 
     /// Same data with no simulated latency, for SwiftUI previews and UI tests.

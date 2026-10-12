@@ -9,10 +9,11 @@ struct MainScreen<Invoices: View, Receipts: View>: View {
     @Environment(\.eirs) private var eirs
     let container: AppContainer
     let navigator: MainNavigator
-    let invoicesTab: (Int) -> Invoices
-    let receiptsTab: () -> Receipts
+    let invoicesTab: (Int, @escaping (String) -> Void) -> Invoices
+    let receiptsTab: (@escaping (String) -> Void) -> Receipts
 
     @State private var model: MainModel
+    @State private var rowActions: RowActionsModel
     @State private var tab: MainTab = .home
     @State private var sheet: MainSheet?
     @State private var canceledRequest = 0
@@ -20,25 +21,30 @@ struct MainScreen<Invoices: View, Receipts: View>: View {
 
     init(container: AppContainer,
          navigator: MainNavigator,
-         @ViewBuilder invoicesTab: @escaping (Int) -> Invoices,
-         @ViewBuilder receiptsTab: @escaping () -> Receipts) {
+         @ViewBuilder invoicesTab: @escaping (Int, @escaping (String) -> Void) -> Invoices,
+         @ViewBuilder receiptsTab: @escaping (@escaping (String) -> Void) -> Receipts) {
         self.container = container
         self.navigator = navigator
         self.invoicesTab = invoicesTab
         self.receiptsTab = receiptsTab
         _model = State(initialValue: MainModel(container: container))
+        _rowActions = State(initialValue: RowActionsModel(container: container))
     }
 
     var body: some View {
-        LoadingHost(loading: model.loading) {
+        LoadingHost(loading: model.loading ?? rowActions.loading) {
             shell
                 .eirsSheet(isPresented: sheetBinding(.branch)) { branchSheet }
                 .eirsSheet(isPresented: sheetBinding(.user)) { userSheet }
                 .eirsSheet(isPresented: sheetBinding(.terminal)) { terminalSheet }
                 .eirsSheet(isPresented: sheetBinding(.new)) { registerSheet }
+                .eirsSheet(isPresented: sheetBinding(.rowActions)) { rowActionSheet }
+                .eirsSheet(isPresented: sheetBinding(.cancelInvoice)) { cancelInvoiceSheet }
         }
         .task { await model.observeSession() }
         .task { await model.observeBranch() }
+        .task { await rowActions.observeInvoices() }
+        .task { await rowActions.observeReceipts() }
     }
 
     // MARK: Shell
@@ -77,10 +83,10 @@ struct MainScreen<Invoices: View, Receipts: View>: View {
                         onViewAllInvoices: { selectTab(.invoices) })
             }
             MainTabPage(tab: .invoices, active: tab == .invoices, branch: model.selectedBranch) {
-                invoicesTab(canceledRequest)
+                invoicesTab(canceledRequest, { openRowActions(.invoice($0)) })
             }
             MainTabPage(tab: .receipts, active: tab == .receipts, branch: model.selectedBranch) {
-                receiptsTab()
+                receiptsTab({ openRowActions(.receipt($0)) })
             }
             MainTabPage(tab: .more, active: tab == .more, branch: model.selectedBranch) {
                 MoreTab(container: container,
@@ -90,7 +96,8 @@ struct MainScreen<Invoices: View, Receipts: View>: View {
                         onOpenCanceledInvoices: {
                             canceledRequest += 1
                             selectTab(.invoices)
-                        })
+                        },
+                        onOpenSettings: navigator.openSettings)
             }
         }
     }
@@ -124,7 +131,10 @@ struct MainScreen<Invoices: View, Receipts: View>: View {
     private var userSheet: some View {
         MainUserSheet(
             session: model.session,
-            onAccountSettings: { selectTab(.more) },
+            onAccountSettings: {
+                sheet = nil
+                navigator.openSettings(.account)
+            },
             onSignOut: {
                 sheet = nil
                 Task {
@@ -145,6 +155,90 @@ struct MainScreen<Invoices: View, Receipts: View>: View {
                     await model.startTerminal(chosen, onStarted: { navigator.startTerminal($0) })
                 }
             })
+    }
+
+    // MARK: Row actions (⋮ on invoice and receipt cards)
+
+    private func openRowActions(_ target: RowActionTarget) {
+        rowActions.target = target
+        sheet = .rowActions
+    }
+
+    @ViewBuilder private var rowActionSheet: some View {
+        switch rowActions.target {
+        case let .invoice(id)?:
+            if let inv = rowActions.invoice(id) {
+                RowActionSheet(
+                    eyebrow: "\(inv.documentType.rawValue) · \(inv.transactionType.rawValue) · \(inv.status.rawValue)",
+                    title: inv.displayNumber,
+                    subtitle: inv.buyer.name + " · " + Fmt.etb(inv.totals.grandTotal),
+                    items: rowActions.invoiceActions(inv).map { invoiceItem($0, inv) })
+            }
+        case let .receipt(id)?:
+            if let view = rowActions.receipt(id) {
+                RowActionSheet(
+                    eyebrow: "RECEIPT · " + view.receipt.type.rawValue,
+                    title: ReceiptStyle.receiptNo(view.receipt),
+                    subtitle: view.buyer.name + " · " + Fmt.etb(view.amount),
+                    items: RowActions.forReceipt(view).map { receiptItem($0, view) })
+            }
+        case nil:
+            EmptyView()
+        }
+    }
+
+    /// Runs a sheet option: close the sheet first, then navigate.
+    private func act(_ action: @escaping () -> Void) -> () -> Void {
+        return {
+            sheet = nil
+            action()
+        }
+    }
+
+    private func invoiceItem(_ action: InvoiceRowAction, _ inv: Invoice) -> RowActionItem {
+        switch action {
+        case .viewDetails:
+            return RowActionItem(id: "view", label: "View details", icon: EirsIcons.eye, action: act { navigator.openInvoice(inv.id) })
+        case .makeCreditNote:
+            return RowActionItem(id: "cre", label: "Make credit note", icon: EirsIcons.fileMinus,
+                                 action: act { navigator.makeAdjustment(inv.id, .cre) })
+        case .makeDebitNote:
+            return RowActionItem(id: "deb", label: "Make debit note", icon: EirsIcons.fileDiff,
+                                 action: act { navigator.makeAdjustment(inv.id, .deb) })
+        case .cancel:
+            return RowActionItem(id: "cancel", label: "Cancel invoice", icon: EirsIcons.xCircle, danger: true, separatorBefore: true,
+                                 action: {
+                                     rowActions.cancelInvoiceId = inv.id
+                                     rowActions.cancelReason = .customerRequest
+                                     sheet = .cancelInvoice
+                                 })
+        case .makeInterim:
+            return RowActionItem(id: "int", label: "Make interim invoice", icon: EirsIcons.fileLines,
+                                 action: act { navigator.makeRetainerInvoice(inv.id, .int) })
+        case .makeFinal:
+            return RowActionItem(id: "fin", label: "Make final invoice", icon: EirsIcons.fileLines,
+                                 action: act { navigator.makeRetainerInvoice(inv.id, .fin) })
+        }
+    }
+
+    private func receiptItem(_ action: ReceiptRowAction, _ view: ReceiptView) -> RowActionItem {
+        switch action {
+        case .viewDetails:
+            return RowActionItem(id: "view", label: "View details", icon: EirsIcons.eye,
+                                 action: act { navigator.openReceipt(view.id) })
+        case let .viewLinkedInvoice(invoiceId):
+            return RowActionItem(id: "linked", label: "View linked invoice", icon: EirsIcons.link,
+                                 action: act { navigator.openInvoice(invoiceId) })
+        }
+    }
+
+    /// The existing cancel sheet, opened from "Cancel invoice" in the ⋮ menu.
+    private var cancelInvoiceSheet: some View {
+        InvoiceCancelSheet(number: rowActions.cancelInvoiceId.flatMap { rowActions.invoice($0)?.number } ?? "",
+                           reason: $rowActions.cancelReason) {
+            sheet = nil
+            Task { await rowActions.confirmCancel() }
+        }
     }
 
     private var registerSheet: some View {

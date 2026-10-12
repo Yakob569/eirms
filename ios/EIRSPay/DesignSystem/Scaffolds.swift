@@ -6,12 +6,14 @@ struct ViewHeader<Title: View, Trailing: View>: View {
     @Environment(\.eirs) private var eirs
     var eyebrow: String
     var onBack: () -> Void
+    /// Close (×) instead of back (←) for full-screen task pages such as credit notes.
+    var backIcon: LineIconSpec = EirsIcons.arrowLeft
     @ViewBuilder var title: () -> Title
     @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
         HStack(spacing: 12) {
-            BackButton(action: onBack)
+            IconSquareButton(icon: backIcon, action: onBack)
             VStack(alignment: .leading, spacing: 2) {
                 if !eyebrow.isEmpty { Eyebrow(text: eyebrow, size: 10, tracking: 0.12) }
                 title()
@@ -27,8 +29,9 @@ struct ViewHeader<Title: View, Trailing: View>: View {
 }
 
 extension ViewHeader where Trailing == EmptyView {
-    init(eyebrow: String, onBack: @escaping () -> Void, @ViewBuilder title: @escaping () -> Title) {
-        self.init(eyebrow: eyebrow, onBack: onBack, title: title, trailing: { EmptyView() })
+    init(eyebrow: String, onBack: @escaping () -> Void, backIcon: LineIconSpec = EirsIcons.arrowLeft,
+         @ViewBuilder title: @escaping () -> Title) {
+        self.init(eyebrow: eyebrow, onBack: onBack, backIcon: backIcon, title: title, trailing: { EmptyView() })
     }
 }
 

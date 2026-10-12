@@ -121,10 +121,8 @@ struct InvLineDraft: Identifiable, Equatable {
         lines[index] = line
     }
 
-    func setLineDescription(_ id: Int, _ value: String) { updateLine(id) { $0.description = value } }
-    func setLineQuantity(_ id: Int, _ value: String) { updateLine(id) { $0.quantity = value.decimalOnly } }
-    func setLinePrice(_ id: Int, _ value: String) { updateLine(id) { $0.price = value.decimalOnly } }
-    func setLineTaxCode(_ id: Int, _ code: TaxCode) { updateLine(id) { $0.taxCode = code } }
+    /// Writes back an edited line (from the shared `InvLineEditor`).
+    func replaceLine(_ line: InvLineDraft) { updateLine(line.id) { $0 = line } }
 
     func removeLine(_ id: Int) {
         if lines.count > 1 {

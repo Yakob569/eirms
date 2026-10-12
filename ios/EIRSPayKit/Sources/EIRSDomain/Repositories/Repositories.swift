@@ -24,6 +24,31 @@ public protocol MerchantRepository: Sendable {
     func seller() -> Party
 }
 
+/// Settings: credentials, seller profile, branches → source systems → API keys, sessions and the MoR probe.
+public protocol SettingsRepository: Sendable {
+    func observeSettings() -> AsyncStream<OrgSettings>
+    func snapshot() async -> OrgSettings
+    func saveCredentials(_ credentials: MorCredentials) async
+    func saveSeller(_ seller: SellerProfile) async
+    func setMerchantExcise(_ enabled: Bool) async
+    func addBranch() async -> BranchProfile
+    func saveBranch(_ branch: BranchProfile) async throws
+    func deleteBranch(id: String) async throws
+    func addSourceSystem(branchId: String) async throws -> SourceSystemProfile
+    func saveSourceSystem(_ system: SourceSystemProfile) async throws
+    func deleteSourceSystem(id: String) async throws
+    /// Sends a signed probe for one source system; returns it with its new verification state.
+    func verifySourceSystem(id: String, hsn: String) async throws -> SourceSystemProfile
+    func createApiKey(_ draft: ApiKeyDraft) async throws -> CreatedApiKey
+    func saveApiKey(_ key: ApiKey) async throws
+    func revokeApiKey(id: String) async throws
+    func signOutSession(id: String) async
+    func signOutOtherSessions() async
+    func recordPasswordChange() async
+    /// Sends the signed probe invoice built from credentials, seller profile and the first source system.
+    func runSetupVerification() async throws -> Bool
+}
+
 public protocol InvoiceRepository: Sendable {
     func observeInvoices() -> AsyncStream<[Invoice]>
     func register(_ draft: InvoiceDraft) async throws -> Invoice

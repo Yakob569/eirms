@@ -94,6 +94,8 @@ struct InvoicesTabContent: View {
     @State private var model: InvoicesModel
     var showCanceledRequest: Int
     var onOpenInvoice: (String) -> Void
+    /// Opens the ⋮ bottom sheet (owned by the shell) for an invoice.
+    var onRowActions: (String) -> Void
 
     private static let statusChips: [InvStatusChip] = [
         InvStatusChip(id: "all", status: nil, label: "All"),
@@ -112,10 +114,12 @@ struct InvoicesTabContent: View {
         InvTypeChip(id: "g2c", type: .g2c, label: "G2C")
     ]
 
-    init(container: AppContainer, showCanceledRequest: Int, onOpenInvoice: @escaping (String) -> Void) {
+    init(container: AppContainer, showCanceledRequest: Int, onOpenInvoice: @escaping (String) -> Void,
+         onRowActions: @escaping (String) -> Void) {
         _model = State(initialValue: InvoicesModel(container: container))
         self.showCanceledRequest = showCanceledRequest
         self.onOpenInvoice = onOpenInvoice
+        self.onRowActions = onRowActions
     }
 
     var body: some View {
@@ -131,7 +135,8 @@ struct InvoicesTabContent: View {
                     canceledMode: model.filters.canceledMode,
                     copied: model.copier.copiedKey == inv.id,
                     onCopy: { model.copier.copy(key: inv.id, text: inv.irn) },
-                    onOpen: { onOpenInvoice(inv.id) })
+                    onOpen: { onOpenInvoice(inv.id) },
+                    onMenu: { onRowActions(inv.id) })
             }
             if model.loaded && rows.isEmpty {
                 EmptyState(text: "No documents match these filters.")
@@ -189,6 +194,7 @@ private struct InvoiceListCard: View {
     let copied: Bool
     let onCopy: () -> Void
     let onOpen: () -> Void
+    let onMenu: () -> Void
 
     var body: some View {
         ListCard(action: onOpen) {
@@ -214,8 +220,11 @@ private struct InvoiceListCard: View {
                 Badge(text: inv.status.rawValue, background: colors.bg, content: colors.fg)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            MonoText(text: Fmt.etb(inv.totals.grandTotal), size: 13, color: canceledMode ? eirs.muted : eirs.ink,
-                     weight: .medium, strike: canceledMode, lineLimit: 1)
+            HStack(spacing: 2) {
+                MonoText(text: Fmt.etb(inv.totals.grandTotal), size: 13, color: canceledMode ? eirs.muted : eirs.ink,
+                         weight: .medium, strike: canceledMode, lineLimit: 1)
+                RowMenuButton(onTap: onMenu)
+            }
         }
     }
 

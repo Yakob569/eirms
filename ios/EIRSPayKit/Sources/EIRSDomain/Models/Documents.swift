@@ -97,6 +97,8 @@ public struct Invoice: Hashable, Sendable, Identifiable {
 
     public var totals: DocumentTotals { TaxCalculator.calculate(items) }
     public var isCanceled: Bool { status == .canceled }
+    /// "INV-100", "RTN-095": document type prefix plus number, as shown in menus and panels.
+    public var displayNumber: String { "\(documentType.rawValue)-\(number)" }
     /// Sequential counter MoR tracks per source system.
     public var counter: String { String((Int(number) ?? 0) + 1000) }
 }

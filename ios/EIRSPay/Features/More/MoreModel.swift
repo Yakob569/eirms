@@ -12,6 +12,7 @@ final class MoreModel {
     var setupDone = 0
     let branchCount: Int
     var session: Session?
+    var settings: OrgSettings?
 
     @ObservationIgnored private let container: AppContainer
 
@@ -37,6 +38,12 @@ final class MoreModel {
             session = value
         }
     }
+
+    func observeSettings() async {
+        for await value in container.observeSettings() { settings = value }
+    }
+
+    var verified: Bool { SettingsRules.isVerified(stepsDone: setupDone, verified: settings?.setupVerified ?? false) }
 
     func loadSetup() async {
         let done = await container.merchant.setupStepsDone()

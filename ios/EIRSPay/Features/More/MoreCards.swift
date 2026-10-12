@@ -161,6 +161,10 @@ struct MoreReadinessCard: View {
 struct MoreSetupStepper: View {
     @Environment(\.eirs) private var eirs
     var done: Int
+    /// Review / Continue on a step opens its settings page.
+    var onOpenStep: (SettingsPage) -> Void
+
+    private static let stepPages: [SettingsPage] = [.morCredentials, .sellerProfile, .sourceSystems, .verifySetup, .apiKeys]
 
     var body: some View {
         EirsCard(padding: EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16)) {
@@ -192,6 +196,10 @@ struct MoreSetupStepper: View {
                 }
                 Text(step.description).font(EirsFont.sans(13)).foregroundStyle(eirs.muted).lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
+                if isDone || isCurrent {
+                    TextLink(isDone ? "Review →" : "Continue →", size: 13) { onOpenStep(Self.stepPages[index]) }
+                        .padding(.top, 2)
+                }
             }
             .padding(.top, 18)
             .padding(.bottom, 16)
@@ -234,26 +242,33 @@ struct MoreSetupStepper: View {
 private struct MoreSettingRow: Identifiable {
     let label: String
     let meta: String
+    /// nil: not built yet (Departments, Team, Roles do nothing).
+    var page: SettingsPage?
     var id: String { label }
 }
 
 struct MoreSettingsCard: View {
     @Environment(\.eirs) private var eirs
     var session: Session?
-    var branchCount: Int
+    var settings: OrgSettings?
+    var verified: Bool
+    var onOpen: (SettingsPage) -> Void
 
     private var rows: [MoreSettingRow] {
         let userId = session?.user.id ?? ""
         let uid = userId.count > 8 ? String(userId.prefix(8)) + "…" : userId
-        let env = session?.merchant.environment ?? "DEV"
+        let env = settings?.credentials.environment.rawValue ?? session?.merchant.environment ?? "DEV"
+        let activeSystems = settings?.sourceSystems.filter(\.active).count ?? 0
+        let activeKeys = settings?.apiKeys.filter(\.active).count ?? 0
         return [
-            MoreSettingRow(label: "Account", meta: uid),
-            MoreSettingRow(label: "MoR credentials", meta: env),
-            MoreSettingRow(label: "Seller profile", meta: ""),
-            MoreSettingRow(label: "Branches", meta: "\(branchCount)"),
+            MoreSettingRow(label: "Account", meta: uid, page: .account),
+            MoreSettingRow(label: "MoR credentials", meta: env, page: .morCredentials),
+            MoreSettingRow(label: "Seller profile", meta: settings?.seller.legalName ?? "", page: .sellerProfile),
+            MoreSettingRow(label: "Branches", meta: "\(settings?.branches.count ?? 0)", page: .branches),
             MoreSettingRow(label: "Departments", meta: ""),
-            MoreSettingRow(label: "Source systems", meta: "4 active"),
-            MoreSettingRow(label: "API keys", meta: ""),
+            MoreSettingRow(label: "Source systems", meta: "\(activeSystems) active", page: .sourceSystems),
+            MoreSettingRow(label: "API keys", meta: "\(activeKeys) active", page: .apiKeys),
+            MoreSettingRow(label: "Verify setup", meta: verified ? "Verified" : "Not verified", page: .verifySetup),
             MoreSettingRow(label: "Team", meta: "2"),
             MoreSettingRow(label: "Roles", meta: ""),
         ]
@@ -270,11 +285,14 @@ struct MoreSettingsCard: View {
     }
 
     private func settingRow(_ row: MoreSettingRow, divider: Bool) -> some View {
-        MoreChevronRow(height: 52, divider: divider, action: {}) {
+        MoreChevronRow(height: 52, divider: divider, action: { if let page = row.page { onOpen(page) } }) {
             Text(row.label).font(EirsFont.sans(15)).foregroundStyle(eirs.ink).lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if !row.meta.isEmpty {
                 Text(row.meta).font(EirsFont.sans(13)).foregroundStyle(eirs.muted).lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 150, alignment: .trailing)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
