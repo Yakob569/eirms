@@ -10,8 +10,15 @@ final class RepositoriesTests: XCTestCase {
         return nil
     }
 
+    /// First value of a stream, failing the test if it finished empty. (`await` can't sit inside
+    /// XCTUnwrap's autoclosure.)
+    private func value<T: Sendable>(_ stream: AsyncStream<T>) async throws -> T {
+        let got = await first(stream)
+        return try XCTUnwrap(got)
+    }
+
     func testInvoiceTotalsMatchPrototype() async throws {
-        let list = try XCTUnwrap(await first(FakeInvoiceRepository().observeInvoices()))
+        let list = try await value(FakeInvoiceRepository().observeInvoices())
         let inv = try XCTUnwrap(list.first { $0.number == "104" })
         XCTAssertEqual(inv.totals.subtotal, money("23213"))
         XCTAssertEqual(inv.totals.taxTotal, money("3481.95"))
@@ -30,7 +37,7 @@ final class RepositoriesTests: XCTestCase {
         let item = LineItem(description: "X", itemCode: "ITM-1", nature: .goods, unit: "PCS", quantity: 1, unitPrice: money("100"), taxCode: .vat15)
         let new = try await repo.register(InvoiceDraft(documentType: .inv, transactionType: .b2c, branch: .bole, buyer: .walkIn,
                                                        paymentMode: .cash, paymentTerm: .immediate, items: [item]))
-        let list = try XCTUnwrap(await first(repo.observeInvoices()))
+        let list = try await value(repo.observeInvoices())
         XCTAssertEqual(list.first?.id, new.id)
         XCTAssertEqual(new.totals.grandTotal, money("115"))
     }
@@ -38,12 +45,12 @@ final class RepositoriesTests: XCTestCase {
     func testPaymentReceiptNetsOutWithholding() async throws {
         let inv = FakeInvoiceRepository(), wht = FakeWithholdingRepository()
         let views = ObserveReceiptViewsUseCase(receipts: FakeReceiptRepository(), invoices: inv, withholding: wht)
-        let list = try XCTUnwrap(await first(views()))
+        let list = try await value(views())
         let payment = try XCTUnwrap(list.first { $0.receipt.number == "2289" })
         // INV-100: subtotal 11300, grand 12650; 2% withheld on subtotal = 226
         XCTAssertEqual(payment.withheldAmount, money("226"))
         XCTAssertEqual(payment.amount, money("12424"))
-        let records = try XCTUnwrap(await first(ObserveWithholdingUseCase(withholding: wht, receiptViews: views, invoices: inv)()))
+        let records = try await value(ObserveWithholdingUseCase(withholding: wht, receiptViews: views, invoices: inv)())
         XCTAssertEqual(records.count, 4)
         XCTAssertNotNil(records.first { $0.record.id == "WHT-2026-004310" }?.paymentReceipt)
     }

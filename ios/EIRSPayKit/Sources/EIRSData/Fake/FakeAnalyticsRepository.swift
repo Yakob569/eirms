@@ -42,8 +42,12 @@ public final class FakeAnalyticsRepository: AnalyticsRepository, @unchecked Send
         let sh = branch.flatMap { Self.share[$0] } ?? 1.0
         var seed = c.seed
         func rnd() -> Double { seed = (seed * 9301 + 49297) % 233_280; return Double(seed) / 233_280.0 }
-        let series: [Double] = (0..<c.count).map { i in
-            ((sh * c.base * (0.6 + 0.7 * rnd()) * (0.85 + 0.3 * Double(i) / Double(c.count))) * 100).rounded() / 100
+        // Split into typed steps: as one expression it exceeds the type checker's time limit.
+        let series: [Double] = (0..<c.count).map { i -> Double in
+            let noise: Double = 0.6 + 0.7 * rnd()
+            let trend: Double = 0.85 + 0.3 * Double(i) / Double(c.count)
+            let value: Double = sh * c.base * noise * trend
+            return (value * 100).rounded() / 100
         }
         let sales = series.reduce(0, +)
         let taxable = sales / 1.125

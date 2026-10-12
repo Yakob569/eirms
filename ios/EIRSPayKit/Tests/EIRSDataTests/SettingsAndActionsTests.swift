@@ -10,10 +10,17 @@ final class SettingsAndActionsTests: XCTestCase {
         return nil
     }
 
+    /// First value of a stream, failing the test if it finished empty. (`await` can't sit inside
+    /// XCTUnwrap's autoclosure.)
+    private func value<T: Sendable>(_ stream: AsyncStream<T>) async throws -> T {
+        let got = await first(stream)
+        return try XCTUnwrap(got)
+    }
+
     // MARK: Row actions
 
     func testInvoiceRowActionsFollowDocumentFamily() async throws {
-        let all = try XCTUnwrap(await first(FakeInvoiceRepository().observeInvoices()))
+        let all = try await value(FakeInvoiceRepository().observeInvoices())
         func actions(_ number: String) throws -> [InvoiceRowAction] {
             RowActions.forInvoice(try XCTUnwrap(all.first { $0.number == number }), among: all)
         }
@@ -28,7 +35,7 @@ final class SettingsAndActionsTests: XCTestCase {
     func testReceiptLinkedInvoiceActionOnlyWhenLinked() async throws {
         let views = ObserveReceiptViewsUseCase(receipts: FakeReceiptRepository(), invoices: FakeInvoiceRepository(),
                                                withholding: FakeWithholdingRepository())
-        let list = try XCTUnwrap(await first(views()))
+        let list = try await value(views())
         let linked = try XCTUnwrap(list.first { $0.receipt.number == "2289" })
         let walkIn = try XCTUnwrap(list.first { $0.receipt.number == "2291" })
         XCTAssertEqual(RowActions.forReceipt(linked), [.viewDetails, .viewLinkedInvoice("INV-B3N5M7Q9WE")])
@@ -39,7 +46,7 @@ final class SettingsAndActionsTests: XCTestCase {
 
     func testCreditNoteIsCappedAndKeepsBuyer() async throws {
         let repo = FakeInvoiceRepository()
-        let all = try XCTUnwrap(await first(repo.observeInvoices()))
+        let all = try await value(repo.observeInvoices())
         let original = try XCTUnwrap(all.first { $0.number == "104" })
         let register = RegisterAdjustmentNoteUseCase(invoices: repo)
 
@@ -60,7 +67,7 @@ final class SettingsAndActionsTests: XCTestCase {
         XCTAssertEqual(note.buyer, original.buyer)
         XCTAssertEqual(note.amendment?.previousInvoiceId, original.id)
         XCTAssertEqual(note.totals.grandTotal, money("1150"))
-        let after = try XCTUnwrap(await first(repo.observeInvoices()))
+        let after = try await value(repo.observeInvoices())
         XCTAssertFalse(RowActions.forInvoice(original, among: after).contains(.makeCreditNote))
         XCTAssertTrue(RowActions.forInvoice(original, among: after).contains(.makeDebitNote))
     }
@@ -69,7 +76,7 @@ final class SettingsAndActionsTests: XCTestCase {
 
     func testInterimInvoiceAgainstRetainer() async throws {
         let repo = FakeInvoiceRepository()
-        let all = try XCTUnwrap(await first(repo.observeInvoices()))
+        let all = try await value(repo.observeInvoices())
         let retainer = try XCTUnwrap(all.first { $0.documentType == .rtn })
         let register = RegisterRetainerInvoiceUseCase(invoices: repo)
         let item = LineItem(description: "Support, October", itemCode: "SRV-0200", nature: .service, unit: "JOB",
