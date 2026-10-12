@@ -27,8 +27,14 @@ jobs:
 
       - name: Build app for the iOS Simulator
         run: |
+          set -o pipefail
           xcodebuild build \
             -project EIRSPay.xcodeproj \
             -scheme EIRSPay \
             -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee build.log || {
+              # Surface failures as annotations so they show up without opening the raw log.
+              grep -E "error:" build.log | sort -u | head -50 | sed 's/^/::error::/' || true
+              grep -q "error:" build.log || tail -30 build.log | sed 's/^/::error::/'
+              exit 1
+            }
