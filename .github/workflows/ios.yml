@@ -20,6 +20,13 @@ jobs:
       - name: Domain + Data package tests
         run: swift test --package-path EIRSPayKit
 
+      - name: Select the newest Xcode
+        # XcodeGen writes the Xcode 16 project format (77), which the runner's default Xcode 15 can't open.
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
       - name: Generate Xcode project
         run: |
           brew install xcodegen
